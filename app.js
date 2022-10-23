@@ -1,19 +1,27 @@
-var createError = require("http-errors");
-var express = require("express");
-var path = require("path");
-var cookieParser = require("cookie-parser");
-var logger = require("morgan");
+require("dotenv").config();
+const createError = require("http-errors");
+const express = require("express");
+const path = require("path");
+const cookieParser = require("cookie-parser");
+const logger = require("morgan");
 
-var indexRouter = require("./routes/index");
-var brandRouter = require("./routes/brand");
-var categoryRouter = require("./routes/category");
-var itemRouter = require("./routes/item");
+const indexRouter = require("./routes/index");
+const brandRouter = require("./routes/brand");
+const categoryRouter = require("./routes/category");
+const itemRouter = require("./routes/item");
+const { default: mongoose } = require("mongoose");
 
-var app = express();
+const app = express();
 
 // view engine setup
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "pug");
+
+//mongodb connection
+mongoose
+  .connect(process.env.MONGODB_URL)
+  .then(() => console.log("Connected to db"))
+  .catch((err) => console.log(err.message));
 
 app.use(logger("dev"));
 app.use(express.json());
