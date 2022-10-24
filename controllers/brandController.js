@@ -1,6 +1,17 @@
+const Brand = require("../models/brand.model");
+
 // Display list of all Brands.
 exports.brand_list = (req, res) => {
-  res.send("NOT IMPLEMENTED: Brand List");
+  Brand.find().exec((err, brands) => {
+    if (err) {
+      // Error in API usage.
+      return next(err);
+    }
+    res.render("brand_list", {
+      title: "Brand list",
+      brands: brands,
+    });
+  });
 };
 
 // Display detail page for a specific Brand.

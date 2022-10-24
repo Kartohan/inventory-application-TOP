@@ -1,5 +1,23 @@
 extends layout
 
 block content
-  h1= title
   p Welcome to #{title}
+  div.flex.gap-5.justify-center.flex-wrap.mx-auto(class="max-w-[500px]")
+    a(href=brands[0].url) 
+      div.h-28.w-56.rounded-lg.relative.flex.justify-center.items-center.shadow-md.overflow-hidden(class="transition hover:scale-105 hover:shadow-xl bg-gradient-to-r from-cyan-500 to-blue-500")
+        p.text-black.z-10.text-2xl.text-center #{brands[0].name}
+    a(href=brands[1].url) 
+      div.h-28.w-56.rounded-lg.relative.flex.justify-center.items-center.shadow-md.overflow-hidden(class="transition hover:scale-105 hover:shadow-xl bg-gradient-to-r from-orange-400 to-red-300")
+        p.text-black.z-10.text-2xl.text-center #{brands[1].name}
+    a(href=brands[2].url) 
+      div.h-28.w-56.rounded-lg.relative.flex.justify-center.items-center.shadow-md.overflow-hidden(class="transition hover:scale-105 hover:shadow-xl bg-gradient-to-r from-violet-500 to-fuchsia-500")
+        p.text-black.z-10.text-2xl.text-center #{brands[2].name}
+    a(href=brands[3].url) 
+      div.h-28.w-56.rounded-lg.relative.flex.justify-center.items-center.shadow-md.overflow-hidden(class="transition hover:scale-105 hover:shadow-xl bg-gradient-to-r from-fuchsia-400 to-blue-300")
+        p.text-black.z-10.text-2xl.text-center #{brands[3].name}
+  div.mx-auto.my-10.flex.gap-10.justify-center.flex-wrap(class="max-w-[1000px]")
+    for category in categories
+        a.h-72.w-56(href=category.url)
+            div.h-72.w-56.rounded-lg.relative.flex.justify-center.items-center.shadow-md.ring-1.overflow-hidden(class="transition hover:scale-105 hover:shadow-xl")
+                img.absolute.object-contain.h-full.w-full.p-2(src="uploads/" + category.image, alt=category.name)(class="hover:blur-[2px]")
+                p.text-white.z-10.text-2xl.text-center.pointer-events-none(class="catalog-text") #{category.name + "s"}

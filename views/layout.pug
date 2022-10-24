@@ -4,4 +4,11 @@ html
     title= title
     link(rel='stylesheet', href='/stylesheets/style.css')
   body
+  div
+    div.flex.justify-around.px-10.bg-orange-600.h-14.items-center
+      a.text-3xl.font-bold.text-white(href="/") MyApp
+      nav.flex.gap-10
+        a.text-white.font-bold(href="/brand") Brands
+        a.text-white.font-bold(href="/category") Categories
+        a.text-white.font-bold(href="/item") Items
     block content

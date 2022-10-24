@@ -1,4 +1,4 @@
-// Display list of all category's.
+// Display list of all categories.
 exports.category_list = (req, res) => {
   res.send("NOT IMPLEMENTED: category List");
 };
