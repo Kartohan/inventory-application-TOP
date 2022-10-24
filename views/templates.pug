@@ -1,0 +1,20 @@
+extends layout
+
+block content
+    div.ml-5.mt-5
+        a(href="#") 
+            div.bg-gradient-to-r.from-cyan-500.to-blue-500.h-28.w-56.rounded-lg.relative.flex.justify-center.items-center.shadow-md.overflow-hidden(class="transition hover:scale-105 hover:shadow-xl")
+                //- p.h-full.w-full.absolute.text-white.text-xl.text-center.origin-center(class="text-center") Brands
+                //- img.absolute.p-2.object-contain.object-center.h-full.w-full(src="images/apple-logo.png", alt="")
+                p.text-black.z-10.text-2xl.text-center Brand
+    div.mx-5.my-5.flex.gap-10
+        a.h-72.w-56(href="#")
+            div.h-72.w-56.rounded-lg.relative.flex.justify-center.items-center.shadow-md.ring-1.overflow-hidden(class="transition hover:scale-105 hover:shadow-xl")
+                img.absolute.object-contain.h-full.w-full(src="images/apple-logo.png", alt="")
+                p.text-white.z-10.text-2xl.text-center(class="catalog-text") Category
+        a.h-72.w-56(href="#")
+            div.h-72.w-56.rounded-lg.relative.flex.justify-center.items-center.shadow-md.ring-1.overflow-hidden(class="transition hover:scale-105 hover:shadow-xl")
+                img.absolute.object-contain.h-full.w-full(src="images/apple-logo.png", alt="")
+                p.text-white.z-10.text-2xl.text-center(class="catalog-text") Category
+    div.mx-5.my-5
+        a.h-12.w-36.bg-sky-300.block.rounded-lg.flex.justify-center.items-center(href="#" class="transition hover:scale-[1.02]") Add new item
