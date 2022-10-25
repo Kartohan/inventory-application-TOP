@@ -51,7 +51,7 @@ exports.brand_detail = (req, res, next) => {
 };
 
 // Display Brand create form on GET.
-exports.brand_create_get = (req, res) => {
+exports.brand_create_get = (req, res, next) => {
   res.send("NOT IMPLEMENTED: Brand create GET");
 };
 

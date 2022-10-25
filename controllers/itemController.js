@@ -1,4 +1,6 @@
 const Item = require("../models/item.model");
+const Brand = require("../models/brand.model");
+const Category = require("../models/category.model");
 const async = require("async");
 
 // Display list of all items.
@@ -36,7 +38,26 @@ exports.item_detail = (req, res, next) => {
 
 // Display item create form on GET.
 exports.item_create_get = (req, res) => {
-  res.send("NOT IMPLEMENTED: item create GET");
+  async.parallel(
+    {
+      brands(callback) {
+        Brand.find(callback);
+      },
+      categories(callback) {
+        Category.find(callback);
+      },
+    },
+    (err, results) => {
+      if (err) {
+        return next(err);
+      }
+      res.render("item_form", {
+        title: "Create item",
+        brands: results.brands,
+        categories: results.categories,
+      });
+    }
+  );
 };
 
 // Handle item create on POST.

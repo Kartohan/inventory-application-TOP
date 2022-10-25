@@ -18,7 +18,7 @@ exports.index = function (req, res) {
   async.parallel(
     {
       brand(callback) {
-        Brand.find().sort("descending").exec(callback);
+        Brand.find().exec(callback);
       },
       categories(callback) {
         Category.find().exec(callback);
@@ -29,10 +29,21 @@ exports.index = function (req, res) {
         // Error in API usage.
         return next(err);
       }
-      let brandArray = await randomize(results.brand);
+      let brandArray;
+      if (results.brand.length > 4) {
+        brandArray = await randomize(results.brand);
+      } else {
+        brandArray = results.brand;
+      }
+      let categoriesArray;
+      if (results.categories.length > 6) {
+        categoriesArray = await randomize(results.categories);
+      } else {
+        categoriesArray = results.categories;
+      }
       // Successful, so render.
       res.render("index", {
-        title: "my shop!",
+        title: "My App",
         brands: brandArray,
         categories: results.categories,
       });
