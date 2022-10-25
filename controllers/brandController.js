@@ -1,6 +1,10 @@
 const Brand = require("../models/brand.model");
 const Item = require("../models/item.model");
 const async = require("async");
+const { check, validationResult } = require("express-validator");
+const multer = require("multer");
+const fs = require("fs");
+const path = require("path");
 
 // Display list of all Brands.
 exports.brand_list = (req, res) => {
@@ -52,13 +56,66 @@ exports.brand_detail = (req, res, next) => {
 
 // Display Brand create form on GET.
 exports.brand_create_get = (req, res, next) => {
-  res.send("NOT IMPLEMENTED: Brand create GET");
+  res.render("brand_form", { title: "Create Brand" });
 };
 
+const Storage = multer.diskStorage({
+  destination: "public/uploads",
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + path.extname(file.originalname));
+  },
+});
+const upload = multer({ storage: Storage });
+
 // Handle Brand create on POST.
-exports.brand_create_post = (req, res) => {
-  res.send("NOT IMPLEMENTED: Brand create POST");
-};
+exports.brand_create_post = [
+  upload.single("brandimage"),
+  check("name", "Brand name required").trim().isLength({ min: 1 }).escape(),
+  // Process request after validation and sanitization.
+  (req, res, next) => {
+    // Extract the validation errors from a request.
+    const errors = validationResult(req);
+
+    // Create a brand object with escaped and trimmed data.
+    const brand = new Brand({
+      name: req.body.name,
+      image: req.file.filename,
+    });
+
+    if (!errors.isEmpty()) {
+      fs.unlink(req.file.path, (err) => {
+        if (err) console.log(err.message);
+      });
+      // There are errors. Render the form again with sanitized values/error messages.
+      res.render("brand_form", {
+        title: "Create Brand",
+        brand,
+        errors: errors.array(),
+      });
+      return;
+    } else {
+      // Data from form is valid.
+      // Check if brand with same name already exists.
+      Brand.findOne({ name: req.body.name }).exec((err, found_brand) => {
+        if (err) {
+          return next(err);
+        }
+        if (found_brand) {
+          // brand exists, redirect to its detail page.
+          res.redirect(found_brand.url);
+        } else {
+          brand.save((err) => {
+            if (err) {
+              return next(err);
+            }
+            // Genre saved. Redirect to genre detail page.
+            res.redirect(brand.url);
+          });
+        }
+      });
+    }
+  },
+];
 
 // Display Brand delete form on GET.
 exports.brand_delete_get = (req, res) => {

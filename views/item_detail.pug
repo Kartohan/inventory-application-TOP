@@ -3,7 +3,7 @@ extends layout
 block content 
     div.flex.flex-row.justify-center.mx-auto.my-10.gap-10(class="")
         div.border-r-2.border-orange-200(class="max-w-[30%] max-h-[30%]")
-            img.f-full.h-full.object-contain(class="")(src="../uploads/tshirt.png" alt=item.name)
+            img.f-full.h-full.object-contain.px-4(class="")(src="../uploads/" + item.image alt=item.name)
         div.flex.flex-col.justify-between
             div.flex.flex-col.gap-2
                 p.text-3xl.font-bold(class="border-b-[1px] border-b-black") #{item.name}

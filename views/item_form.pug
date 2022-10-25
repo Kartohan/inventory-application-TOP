@@ -4,7 +4,7 @@ block content
   div.w-full.bg-slate-600.p-3.flex.gap-10.justify-center.items-center
         p.text-2xl.text-bold.text-white #{title}
 
-  form.flex.flex-col.gap-3.mx-auto(method='POST' action='create' class="h-[400px] max-w-[700px] min-w-[300px] p-2")
+  form.flex.flex-col.gap-3.mx-auto(method='POST' action='/item/create' class="max-w-[700px] min-w-[300px] p-2" enctype="multipart/form-data")
     div.flex.gap-2.items-center
         label(for="name") Name:
         input.w-full.bg-slate-100.p-2.rounded-md(type='text', placeholder='Name' name='name' id="name" required='true' class="focus:outline-none transition hover:shadow-[0px_0px_3px_rgba(0,0,0,0.3)] focus:shadow-[0px_0px_3px_rgba(0,0,0,0.7)]" value=(undefined===item ? '' : item.name) )
@@ -12,13 +12,22 @@ block content
         label(for='brand') Brand:
         select.w-full.bg-slate-100.p-2.rounded-md(type='select', placeholder='Select brand' name='brand' required='true', class="focus:outline-none transition hover:shadow-[0px_0px_3px_rgba(0,0,0,0.3)] focus:shadow-[0px_0px_3px_rgba(0,0,0,0.7)]")
           for brand in brands
+            if item
+              option(
+                value=brand._id
+                selected=(
+                  brand._id.toString()==item.brand._id
+                  || brand._id.toString()==item.brand
+                ) ? 'selected' : false
+              ) #{brand.name}
+            else
               option(value=brand._id) #{brand.name}
     div.flex.gap-2.items-center
         label(for="price") Price:
         input.w-full.bg-slate-100.p-2.rounded-md(type='number' min="0" placeholder='Price' id="price" name='price' required='true' class="focus:outline-none transition hover:shadow-[0px_0px_3px_rgba(0,0,0,0.3)] focus:shadow-[0px_0px_3px_rgba(0,0,0,0.7)] invalid:text-pink-600" value=(undefined===item ? '' : item.price) )
     div.flex.gap-2.items-center
         label(for="description") Description:
-        input.w-full.bg-slate-100.p-2.rounded-md(type='textarea' placeholder='Description' id="description" name='description' required='true' class="focus:outline-none transition hover:shadow-[0px_0px_3px_rgba(0,0,0,0.3)] focus:shadow-[0px_0px_3px_rgba(0,0,0,0.7)]" value=(undefined===item ? '' : item.description) )
+        textarea.w-full.bg-slate-100.p-2.rounded-md(placeholder='Description' id="description" name='description' required='true' class="focus:outline-none transition hover:shadow-[0px_0px_3px_rgba(0,0,0,0.3)] focus:shadow-[0px_0px_3px_rgba(0,0,0,0.7)]" value=(undefined===item ? '' : item.description) )
     div.flex.gap-2.items-center
         label(for="stock") Stock:
         input.w-full.bg-slate-100.p-2.rounded-md(type='number' min="0" placeholder='Number in stock' id="stock" name='stock' required='true' class="focus:outline-none transition hover:shadow-[0px_0px_3px_rgba(0,0,0,0.3)] focus:shadow-[0px_0px_3px_rgba(0,0,0,0.7)] invalid:text-pink-600" value=(undefined===item ? '' : item.stock) )
@@ -28,8 +37,9 @@ block content
                 div.flex.justify-center.items-center.gap-x-1
                     input(type='checkbox', name='category', id=category._id, value=category._id, checked=category.checked class="h-5 w-5")
                     label(for=category._id class="checked:bg-slate-300 z-10 relative") #{category.name}
+    div.flex.gap-2.items-center
+        input(type="file" accept="image/png, image/jpeg" required="true" name="itemimage" class="file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:transition file:bg-orange-100 hover:file:bg-orange-300")
     button.h-12.w-36.bg-green-300.block.rounded-lg.mx-auto.my-5(type='submit' class="transition hover:scale-[1.02] hover:bg-green-400") Submit
-
   if errors
     ul
       for error in errors
