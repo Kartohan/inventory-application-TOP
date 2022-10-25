@@ -8,7 +8,7 @@ block content
         for item in brand_items
             a.block(href=item.url)
                 div.bg-slate-100.rounded-lg.shadow-xl(class='h-min-[450px] w-[250px] transition hover:scale-[1.02] hover:shadow-xl hover:ring-1')
-                    img.w-full.object-contain(src="uploads/tshirt.png" alt=item.name class="h-[297px]")
+                    img.w-full.object-contain(src="../uploads/tshirt.png" alt=item.name class="h-[297px]")
                     div.flex-col.px-3.gap-1.flex
                         p.text-xl.font-bold #{item.name}
                         p.text-lg #{item.price}

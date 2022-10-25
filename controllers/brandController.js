@@ -25,7 +25,9 @@ exports.brand_detail = (req, res, next) => {
       },
 
       brand_items: function (callback) {
-        Item.find({ brand: req.params.id }).exec(callback);
+        Item.find({ brand: req.params.id })
+          .populate("categories")
+          .exec(callback);
       },
     },
     function (err, results) {

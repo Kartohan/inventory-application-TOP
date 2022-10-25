@@ -8,12 +8,12 @@ block content
         for item in category_items
             a.block(href=item.url)
                 div.bg-slate-100.rounded-lg.shadow-xl(class='h-min-[450px] w-[250px] transition hover:scale-[1.02] hover:shadow-xl hover:ring-1')
-                    img.w-full.object-contain(src="uploads/tshirt.png" alt=item.name class="h-[297px]")
+                    img.w-full.object-contain(src="../uploads/tshirt.png" alt=item.name class="h-[297px]")
                     div.flex-col.px-3.gap-1.flex
                         p.text-xl.font-bold #{item.name}
                         p.text-lg #{item.price}
                         p.text-lg Avaliable: #{item.stock}
                         div.flex.flex-wrap
                             if item.categories
-                                for category in item.categories
-                                    a.bg-orange-100.inline-block.p-1.mb-1.mr-1.rounded-md.text-sm(href=category.url class="transition hover:bg-orange-300") #{category.name}
+                                for brand in item.brand
+                                    a.bg-sky-200.inline-block.p-1.mb-1.mr-1.rounded-md.text-sm(href=brand.url class="transition hover:bg-sky-300") #{brand.name}

@@ -21,11 +21,13 @@ const ItemSchema = new Schema({
   brand: [
     {
       type: Schema.Types.ObjectId,
+      ref: "Brand",
     },
   ],
   categories: [
     {
       type: Schema.Types.ObjectId,
+      ref: "Category",
     },
   ],
   image: { type: String, required: true },
