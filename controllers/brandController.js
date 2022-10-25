@@ -1,4 +1,6 @@
 const Brand = require("../models/brand.model");
+const Item = require("../models/item.model");
+const async = require("async");
 
 // Display list of all Brands.
 exports.brand_list = (req, res) => {
@@ -15,8 +17,35 @@ exports.brand_list = (req, res) => {
 };
 
 // Display detail page for a specific Brand.
-exports.brand_detail = (req, res) => {
-  res.send(`NOT IMPLEMENTED: Brand detail: ${req.params.id}`);
+exports.brand_detail = (req, res, next) => {
+  async.parallel(
+    {
+      brand: function (callback) {
+        Brand.findById(req.params.id).exec(callback);
+      },
+
+      brand_items: function (callback) {
+        Item.find({ brand: req.params.id }).exec(callback);
+      },
+    },
+    function (err, results) {
+      if (err) {
+        return next(err);
+      }
+      if (results.brand == null) {
+        // No results.
+        var err = new Error("Brand not found");
+        err.status = 404;
+        return next(err);
+      }
+      // Successful, so render
+      res.render("brand_detail", {
+        title: "Brand Detail",
+        brand: results.brand,
+        brand_items: results.brand_items,
+      });
+    }
+  );
 };
 
 // Display Brand create form on GET.

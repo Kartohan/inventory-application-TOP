@@ -1,11 +1,51 @@
+const Category = require("../models/category.model");
+const Item = require("../models/item.model");
+const async = require("async");
+
 // Display list of all categories.
 exports.category_list = (req, res) => {
-  res.send("NOT IMPLEMENTED: category List");
+  Category.find().exec((err, categories) => {
+    if (err) {
+      // Error in API usage.
+      return next(err);
+    }
+    res.render("category_list", {
+      title: "Category list",
+      categories: categories,
+    });
+  });
 };
 
 // Display detail page for a specific category.
-exports.category_detail = (req, res) => {
-  res.send(`NOT IMPLEMENTED: category detail: ${req.params.id}`);
+exports.category_detail = (req, res, next) => {
+  async.parallel(
+    {
+      category: function (callback) {
+        Category.findById(req.params.id).exec(callback);
+      },
+
+      category_items: function (callback) {
+        Item.find({ categories: req.params.id }).exec(callback);
+      },
+    },
+    function (err, results) {
+      if (err) {
+        return next(err);
+      }
+      if (results.category == null) {
+        // No results.
+        var err = new Error("Category not found");
+        err.status = 404;
+        return next(err);
+      }
+      // Successful, so render
+      res.render("category_detail", {
+        title: "Category Detail",
+        category: results.category,
+        category_items: results.category_items,
+      });
+    }
+  );
 };
 
 // Display category create form on GET.

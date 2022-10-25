@@ -1,0 +1,12 @@
+extends layout 
+
+block content
+    div.w-full.bg-slate-600.p-3.flex.gap-10.justify-center.items-center
+        p.text-2xl.text-bold.text-white Categories (#{categories.length})
+        a.h-12.w-40.bg-sky-300.block.rounded-lg.flex.justify-center.items-center(href="/category/create" class="transition hover:scale-[1.02]") Add new category
+    div.mx-auto.my-10.flex.gap-10.justify-center.flex-wrap(class="max-w-[1140px]")
+        for category in categories
+            a.h-72.w-56(href=category.url)
+                div.h-72.w-56.rounded-lg.relative.flex.justify-center.items-center.shadow-md.ring-1.overflow-hidden(class="transition hover:scale-105 hover:shadow-xl")
+                    img.absolute.object-contain.h-full.w-full.p-2(src="uploads/" + category.image, alt=category.name)(class="hover:blur-[2px]")
+                    p.text-white.z-10.text-2xl.text-center.pointer-events-none(class="catalog-text") #{category.name + "s"}

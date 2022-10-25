@@ -1,6 +1,19 @@
+const Item = require("../models/item.model");
+const async = require("async");
+
 // Display list of all items.
-exports.item_list = (req, res) => {
-  res.send("NOT IMPLEMENTED: item List");
+exports.item_list = (req, res, next) => {
+  Item.find().exec((err, items) => {
+    if (err) {
+      // Error in API usage.
+      return next(err);
+    }
+    console.log(items);
+    res.render("item_list", {
+      title: "Item List",
+      items: items,
+    });
+  });
 };
 
 // Display detail page for a specific item.
