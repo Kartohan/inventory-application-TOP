@@ -1,0 +1,32 @@
+extends layout
+
+block content
+    div.w-full.bg-slate-600.p-3.flex.gap-10.justify-center.items-center
+        p.text-2xl.text-bold.text-white #{title} - #[a(href="/category/" + category._id class="text-blue-300") #{category.name} ]
+    if category_items.length
+      p.text-center.text-2xl.py-3.bg-blue-300.mb-5 Delete the following items before attempting to delete this Category
+      div.flex.justify-center.flex-row.gap-5
+          for item in category_items
+              a.block(href=item.url)
+                div.bg-slate-100.rounded-lg.shadow-xl(class='h-min-[450px] w-[250px] transition hover:scale-[1.02] hover:shadow-xl hover:ring-1')
+                    img.w-full.object-contain(src="../../uploads/" + item.image alt=item.name class="h-[297px]")
+                    div.flex-col.px-3.gap-1.flex
+                        p.text-xl.font-bold #{item.name}
+                        p.text-lg #{item.price}
+                        p.text-lg Avaliable: #{item.stock}
+                        div.flex.flex-wrap
+                            if item.categories
+                                a.bg-sky-200.inline-block.p-1.mb-1.mr-1.rounded-md.text-sm(href=item.brand.url class="transition hover:bg-sky-300") #{item.brand.name}
+    else
+      p.text-center.text-2xl.py-3.bg-red-200.mb-5 Do you really want to delete this category?
+      div.mx-auto.my-10.flex.gap-2.items-center.flex-wrap.flex-col
+        div.h-72.w-56.rounded-lg.relative.shadow-md.ring-1.overflow-hidden(class="")
+          img.absolute.object-contain.h-full.w-full.p-2(src="../../uploads/" + category.image, alt=category.name)
+        p.text-white.z-10.text-2xl.text-center(class="catalog-text") #{category.name}
+        form(method='POST' action='')
+              div
+                  input(type='hidden' name='categoryid', required='true', value=category._id )
+                  input(type='hidden' name='imagename', required='true', value=category.image )
+              div.flex.gap-x-10.justify-center.my-5
+                button.h-12.w-36.bg-red-300.block.rounded-lg.flex.justify-center.items-center(type="submit" class="transition hover:scale-[1.02] hover:bg-red-400") Delete category
+                a.h-12.w-36.bg-blue-300.block.rounded-lg.flex.justify-center.items-center(href=(undefined===category ? "/category" : category.url) class="transition hover:scale-[1.02] hover:bg-blue-400") Cancel

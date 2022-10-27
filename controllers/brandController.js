@@ -263,7 +263,6 @@ exports.brand_update_post = [
       return;
     } else {
       // Data from form is valid.
-      // Check if brand with same name already exists.
       Brand.findById(req.params.id, (err, brand) => {
         fs.unlink(path.join("public/uploads", brand.image), (err) => {
           if (err) console.log(err.message);

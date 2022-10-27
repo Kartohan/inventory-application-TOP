@@ -5,6 +5,7 @@ block content
         p.text-2xl.text-bold.text-white Category: #{category.name} (#{category_items.length})
         a.h-12.w-36.bg-sky-300.block.rounded-lg.flex.justify-center.items-center(href="/item/create" + "?category_name=" + category.name class="transition hover:scale-[1.02]") Add new item
         a.h-12.w-36.bg-green-300.block.rounded-lg.flex.justify-center.items-center(href="/category/" + category._id + "/update" class="transition hover:scale-[1.02]") Update category
+        a.h-12.w-36.bg-red-300.block.rounded-lg.flex.justify-center.items-center(href="/category/" + category._id + "/delete" class="transition hover:scale-[1.02]" disabled) Delete category
     div.mx-auto.my-10.flex.gap-5.justify-center.flex-wrap(class="max-w-[1140px]")
         for item in category_items
             a.block(href=item.url)

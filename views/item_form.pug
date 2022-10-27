@@ -47,7 +47,7 @@ block content
     div.flex.gap-2.items-center
         input(type="file" accept="image/png, image/jpeg" required="true" name="itemimage" class="file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:transition file:bg-orange-100 hover:file:bg-orange-300")
     if errors
-        ul.text-red-900
+        ul.text-red-900.bg-red-200.p-3.rounded-lg
             for error in errors
                 li!= error.msg
     div.flex.gap-x-10.justify-center.my-5
