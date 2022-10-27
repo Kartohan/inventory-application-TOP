@@ -19,4 +19,6 @@ block content
             div
                 input(type='hidden' name='itemid', required='true', value=item._id )
                 input(type='hidden' name='imagename', required='true', value=item.image )
-            button.h-12.w-36.bg-red-300.block.rounded-lg.flex.justify-center.items-center(type="submit" class="transition hover:scale-[1.02] hover:bg-red-400") Delete item
+            div.flex.gap-x-10.justify-center.my-5
+                button.h-12.w-36.bg-red-300.block.rounded-lg.flex.justify-center.items-center(type="submit" class="transition hover:scale-[1.02] hover:bg-red-400") Delete item
+                a.h-12.w-36.bg-blue-300.block.rounded-lg.flex.justify-center.items-center(href=(undefined===item ? "/item" : item.url) class="transition hover:scale-[1.02] hover:bg-blue-400") Cancel
