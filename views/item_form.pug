@@ -4,7 +4,7 @@ block content
   div.w-full.bg-slate-600.p-3.flex.gap-10.justify-center.items-center
         p.text-2xl.text-bold.text-white #{title}
 
-  form.flex.flex-col.gap-3.mx-auto(method='POST' action='/item/create' class="max-w-[700px] min-w-[300px] p-2" enctype="multipart/form-data")
+  form.flex.flex-col.gap-3.mx-auto(method='POST' action='' class="max-w-[700px] min-w-[300px] p-2" enctype="multipart/form-data")
     div.flex.gap-2.items-center
         label(for="name") Name:
         input.w-full.bg-slate-100.p-2.rounded-md(type='text', placeholder='Name' name='name' id="name" required='true' class="focus:outline-none transition hover:shadow-[0px_0px_3px_rgba(0,0,0,0.3)] focus:shadow-[0px_0px_3px_rgba(0,0,0,0.7)]" value=(undefined===item ? '' : item.name) )
