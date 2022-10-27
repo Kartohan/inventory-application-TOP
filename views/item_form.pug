@@ -18,6 +18,14 @@ block content
                 selected=(
                   brand._id.toString()==item.brand._id
                   || brand._id.toString()==item.brand
+                  || brand.selected
+                ) ? 'selected' : false
+              ) #{brand.name}
+            else if brand
+              option(
+                value=brand._id
+                selected=(
+                  brand.selected
                 ) ? 'selected' : false
               ) #{brand.name}
             else

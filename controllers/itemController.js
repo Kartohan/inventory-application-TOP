@@ -64,6 +64,16 @@ exports.item_create_get = (req, res) => {
       if (err) {
         return next(err);
       }
+      for (const category of results.categories) {
+        if (category.name === req.query.category_name) {
+          category.checked = "true";
+        }
+      }
+      for (const brand of results.brands) {
+        if (brand.name === req.query.brand_name) {
+          brand.selected = "true";
+        }
+      }
       res.render("item_form", {
         title: "Create item",
         brands: results.brands,
