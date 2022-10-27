@@ -1,6 +1,19 @@
 const Category = require("../models/category.model");
 const Item = require("../models/item.model");
 const async = require("async");
+const { check, validationResult } = require("express-validator");
+const multer = require("multer");
+const fs = require("fs");
+const path = require("path");
+
+const imageFormatCheck = (req) => {
+  let format = req.file.mimetype.split("/");
+  if (format[1] === "jpeg" || format[1] === "png" || format[1] === "jpg") {
+    return false;
+  } else {
+    return true;
+  }
+};
 
 // Display list of all categories.
 exports.category_list = (req, res) => {
@@ -52,13 +65,72 @@ exports.category_detail = (req, res, next) => {
 
 // Display category create form on GET.
 exports.category_create_get = (req, res) => {
-  res.send("NOT IMPLEMENTED: category create GET");
+  res.render("category_form", { title: "Create Category" });
 };
 
+const Storage = multer.diskStorage({
+  destination: "public/uploads",
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + path.extname(file.originalname));
+  },
+});
+const upload = multer({ storage: Storage });
+
 // Handle category create on POST.
-exports.category_create_post = (req, res) => {
-  res.send("NOT IMPLEMENTED: category create POST");
-};
+exports.category_create_post = [
+  upload.single("categoryimage"),
+  check("name", "Name field required").trim().isLength({ min: 1 }).escape(),
+  // Process request after validation and sanitization.
+  (req, res, next) => {
+    // Extract the validation errors from a request.
+    const errors = validationResult(req);
+
+    // Create a brand object with escaped and trimmed data.
+    const category = new Category({
+      name: req.body.name,
+      image: req.file.filename,
+    });
+
+    if (imageFormatCheck(req)) {
+      errors.errors.push({
+        msg: "File format must be .png, .jpg or .jpeg",
+      });
+    }
+
+    if (!errors.isEmpty()) {
+      fs.unlink(req.file.path, (err) => {
+        if (err) console.log(err.message);
+      });
+      // There are errors. Render the form again with sanitized values/error messages.
+      res.render("category_form", {
+        title: "Create Category",
+        category,
+        errors: errors.array(),
+      });
+      return;
+    } else {
+      // Data from form is valid.
+      // Check if brand with same name already exists.
+      Category.findOne({ name: req.body.name }).exec((err, found_category) => {
+        if (err) {
+          return next(err);
+        }
+        if (found_category) {
+          // category exists, redirect to its detail page.
+          res.redirect(found_category.url);
+        } else {
+          category.save((err) => {
+            if (err) {
+              return next(err);
+            }
+            // Genre saved. Redirect to genre detail page.
+            res.redirect(category.url);
+          });
+        }
+      });
+    }
+  },
+];
 
 // Display category delete form on GET.
 exports.category_delete_get = (req, res) => {

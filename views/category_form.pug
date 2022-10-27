@@ -1,0 +1,16 @@
+extends layout 
+
+block content 
+    div.w-full.bg-slate-600.p-3.flex.gap-10.justify-center.items-center
+        p.text-2xl.text-bold.text-white #{title}
+    form.flex.flex-col.gap-3.mx-auto(method='POST' action='/category/create' class="max-w-[700px] min-w-[300px] p-2" enctype="multipart/form-data")
+        div.flex.gap-2.items-center
+            label(for="name") Name:
+            input.w-full.bg-slate-100.p-2.rounded-md(type='text', placeholder='Name' name='name' id="name" required='true' class="focus:outline-none transition hover:shadow-[0px_0px_3px_rgba(0,0,0,0.3)] focus:shadow-[0px_0px_3px_rgba(0,0,0,0.7)]" value=(undefined===category ? '' : category.name) )
+        div.flex.gap-2.items-center
+            input(type="file" accept="image/png, image/jpeg" required="true" name="categoryimage" class="file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:transition file:bg-orange-100 hover:file:bg-orange-300")
+        if errors
+            ul.text-red-900
+                for error in errors
+                    li!= error.msg
+        button.h-12.w-36.bg-green-300.block.rounded-lg.mx-auto.my-5(type='submit' class="transition hover:scale-[1.02] hover:bg-green-400") Submit

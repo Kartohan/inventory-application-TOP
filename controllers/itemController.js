@@ -7,6 +7,15 @@ const multer = require("multer");
 const fs = require("fs");
 const path = require("path");
 
+const imageFormatCheck = (req) => {
+  let format = req.file.mimetype.split("/");
+  if (format[1] === "jpeg" || format[1] === "png" || format[1] === "jpg") {
+    return false;
+  } else {
+    return true;
+  }
+};
+
 // Display list of all items.
 exports.item_list = (req, res, next) => {
   Item.find()
@@ -119,6 +128,12 @@ exports.item_create_post = [
       image: req.file.filename,
     });
 
+    if (imageFormatCheck(req)) {
+      errors.errors.push({
+        msg: "File format must be .png, .jpg or .jpeg",
+      });
+    }
+
     if (!errors.isEmpty()) {
       // There are errors. Render form again with sanitized values/error messages.
       fs.unlink(req.file.path, (err) => {
@@ -127,7 +142,7 @@ exports.item_create_post = [
       // Get all categories and brands for form.
       async.parallel(
         {
-          brands(callback) {
+          brand(callback) {
             Brand.find().sort({ name: 1 }).exec(callback);
           },
           categories(callback) {
@@ -147,7 +162,7 @@ exports.item_create_post = [
           }
           res.render("item_form", {
             title: "Create item",
-            brands: results.brands,
+            brand: results.brand,
             categories: results.categories,
             item,
             errors: errors.array(),
@@ -170,17 +185,80 @@ exports.item_create_post = [
 
 // Display item delete form on GET.
 exports.item_delete_get = (req, res) => {
-  res.send("NOT IMPLEMENTED: item delete GET");
+  Item.findById(req.params.id)
+    .populate("categories")
+    .exec((err, item) => {
+      if (err) {
+        return next(err);
+      }
+      if (item == null) {
+        // No results.
+        res.redirect("/item");
+      }
+      // Successful, so render.
+      res.render("item_delete", {
+        title: "Delete Item",
+        item: item,
+      });
+    });
 };
 
 // Handle item delete on POST.
 exports.item_delete_post = (req, res) => {
-  res.send("NOT IMPLEMENTED: item delete POST");
+  Item.findByIdAndRemove(req.body.itemid, (err) => {
+    if (err) {
+      return next(err);
+    }
+    fs.unlink(path.join("public/uploads", req.body.imagename), (err) => {
+      if (err) console.log(err.message);
+    });
+    // Success - go to item list
+    res.redirect("/item");
+  });
 };
 
 // Display item update form on GET.
-exports.item_update_get = (req, res) => {
-  res.send("NOT IMPLEMENTED: item update GET");
+exports.item_update_get = (req, res, next) => {
+  async.parallel(
+    {
+      brands(callback) {
+        Brand.find().sort({ name: 1 }).exec(callback);
+      },
+      categories(callback) {
+        Category.find(callback);
+      },
+      item(callback) {
+        Item.findById(req.params.id)
+          .populate("brand")
+          .populate("categories")
+          .exec(callback);
+      },
+    },
+    (err, results) => {
+      if (err) {
+        return next(err);
+      }
+      if (results.item == null) {
+        const err = new Error("Item not found");
+        err.status = 404;
+        return next(err);
+      }
+      for (const category of results.categories) {
+        for (const itemCategory of results.item.categories) {
+          if (category._id.toString() === itemCategory._id.toString()) {
+            category.checked = "true";
+          }
+        }
+      }
+      // Successful, so render.
+      res.render("item_form", {
+        title: "Update item",
+        brands: results.brands,
+        categories: results.categories,
+        item: results.item,
+      });
+    }
+  );
 };
 
 // Handle item update on POST.

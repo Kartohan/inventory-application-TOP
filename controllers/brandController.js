@@ -6,6 +6,15 @@ const multer = require("multer");
 const fs = require("fs");
 const path = require("path");
 
+const imageFormatCheck = (req) => {
+  let format = req.file.mimetype.split("/");
+  if (format[1] === "jpeg" || format[1] === "png" || format[1] === "jpg") {
+    return false;
+  } else {
+    return true;
+  }
+};
+
 // Display list of all Brands.
 exports.brand_list = (req, res) => {
   Brand.find().exec((err, brands) => {
@@ -81,6 +90,12 @@ exports.brand_create_post = [
       name: req.body.name,
       image: req.file.filename,
     });
+
+    if (imageFormatCheck(req)) {
+      errors.errors.push({
+        msg: "File format must be .png, .jpg or .jpeg",
+      });
+    }
 
     if (!errors.isEmpty()) {
       fs.unlink(req.file.path, (err) => {

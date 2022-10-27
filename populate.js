@@ -28,10 +28,11 @@ const brands = [];
 const categories = [];
 const items = [];
 
-function brandCreate(name, image, cb) {
+function brandCreate(name, image, admin, cb) {
   const brand = new Brand({
     name: name,
     image: image,
+    admin: admin,
   });
 
   brand.save(function (err) {
@@ -45,10 +46,11 @@ function brandCreate(name, image, cb) {
   });
 }
 
-function categoryCreate(name, image, cb) {
+function categoryCreate(name, image, admin, cb) {
   const category = new Category({
     name: name,
     image: image,
+    admin: admin,
   });
 
   category.save(function (err) {
@@ -70,6 +72,7 @@ function itemCreate(
   brand,
   categories,
   image,
+  admin,
   cb
 ) {
   itemdetail = {
@@ -78,6 +81,7 @@ function itemCreate(
     description: description,
     stock: stock,
     image: image,
+    admin: admin,
   };
   if (brand != false) itemdetail.brand = brand;
   if (categories != false) itemdetail.categories = categories;
@@ -98,37 +102,37 @@ function createBrandsAndCategories(cb) {
   async.series(
     [
       function (callback) {
-        brandCreate("Apple", "applelogo.png", callback);
+        brandCreate("Apple", "applelogo.png", true, callback);
       },
       function (callback) {
-        brandCreate("Indesit", "indesitlogo.png", callback);
+        brandCreate("Indesit", "indesitlogo.png", true, callback);
       },
       function (callback) {
-        brandCreate("Xiaomi", "xiaomilogo.png", callback);
+        brandCreate("Xiaomi", "xiaomilogo.png", true, callback);
       },
       function (callback) {
-        brandCreate("Gucci", "guccilogo.png", callback);
+        brandCreate("Gucci", "guccilogo.png", true, callback);
       },
       function (callback) {
-        brandCreate("Samsung", "samsunglogo.png", callback);
+        brandCreate("Samsung", "samsunglogo.png", true, callback);
       },
       function (callback) {
-        brandCreate("Zara", "zaralogo.png", callback);
+        brandCreate("Zara", "zaralogo.png", true, callback);
       },
       function (callback) {
-        categoryCreate("Phone", "phone.png", callback);
+        categoryCreate("Phone", "phone.png", true, callback);
       },
       function (callback) {
-        categoryCreate("Bag", "bag.png", callback);
+        categoryCreate("Bag", "bag.png", true, callback);
       },
       function (callback) {
-        categoryCreate("T-shirt", "tshirt.png", callback);
+        categoryCreate("T-shirt", "tshirt.png", true, callback);
       },
       function (callback) {
-        categoryCreate("Washing Machine", "washingmachine.png", callback);
+        categoryCreate("Washing Machine", "washingmachine.png", true, callback);
       },
       function (callback) {
-        categoryCreate("Fridge", "fridge.png", callback);
+        categoryCreate("Fridge", "fridge.png", true, callback);
       },
     ],
     // optional callback
@@ -145,9 +149,10 @@ function createItems(cb) {
           1000,
           "What a phone!",
           3,
-          [brands[0]],
+          brands[0],
           [categories[0]],
           "iphone.png",
+          true,
           callback
         );
       },
@@ -157,9 +162,10 @@ function createItems(cb) {
           250,
           "Phone",
           10,
-          [brands[2]],
+          brands[2],
           [categories[0]],
           "xiaomi.png",
+          true,
           callback
         );
       },
@@ -169,9 +175,10 @@ function createItems(cb) {
           750,
           "Washes your clothes",
           15,
-          [brands[1]],
+          brands[1],
           [categories[3]],
           "washing.png",
+          true,
           callback
         );
       },
@@ -181,9 +188,10 @@ function createItems(cb) {
           500,
           "This is the Best Refrigirator!",
           10,
-          [brands[4]],
+          brands[4],
           [categories[4]],
           "samsungfridge.png",
+          true,
           callback
         );
       },
@@ -193,9 +201,10 @@ function createItems(cb) {
           1000,
           "Bag for your girlfriend!",
           13,
-          [brands[3]],
+          brands[3],
           [categories[1]],
           "guccibag.png",
+          true,
           callback
         );
       },
@@ -205,9 +214,10 @@ function createItems(cb) {
           1000,
           "We have every size of this!",
           75,
-          [brands[5]],
+          brands[5],
           [categories[2]],
           "zaratshirt.png",
+          true,
           callback
         );
       },

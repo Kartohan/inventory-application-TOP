@@ -18,12 +18,10 @@ const ItemSchema = new Schema({
     type: Number,
     required: true,
   },
-  brand: [
-    {
-      type: Schema.Types.ObjectId,
-      ref: "Brand",
-    },
-  ],
+  brand: {
+    type: Schema.Types.ObjectId,
+    ref: "Brand",
+  },
   categories: [
     {
       type: Schema.Types.ObjectId,
@@ -31,6 +29,10 @@ const ItemSchema = new Schema({
     },
   ],
   image: { type: String, required: true },
+  admin: {
+    type: Boolean,
+    default: false,
+  },
 });
 //Virtual
 

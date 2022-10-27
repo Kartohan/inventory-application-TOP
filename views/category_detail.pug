@@ -4,6 +4,7 @@ block content
     div.w-full.bg-slate-600.p-3.flex.gap-10.justify-center.items-center
         p.text-2xl.text-bold.text-white Category: #{category.name} (#{category_items.length})
         a.h-12.w-36.bg-sky-300.block.rounded-lg.flex.justify-center.items-center(href="/item/create" class="transition hover:scale-[1.02]") Add new item
+        a.h-12.w-36.bg-green-300.block.rounded-lg.flex.justify-center.items-center(href="/category/" + category._id + "/update" class="transition hover:scale-[1.02]") Update category
     div.mx-auto.my-10.flex.gap-5.justify-center.flex-wrap(class="max-w-[1140px]")
         for item in category_items
             a.block(href=item.url)
@@ -15,5 +16,4 @@ block content
                         p.text-lg Avaliable: #{item.stock}
                         div.flex.flex-wrap
                             if item.categories
-                                for brand in item.brand
-                                    a.bg-sky-200.inline-block.p-1.mb-1.mr-1.rounded-md.text-sm(href=brand.url class="transition hover:bg-sky-300") #{brand.name}
+                                a.bg-sky-200.inline-block.p-1.mb-1.mr-1.rounded-md.text-sm(href=item.brand.url class="transition hover:bg-sky-300") #{item.brand.name}

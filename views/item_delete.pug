@@ -1,0 +1,22 @@
+extends layout
+
+block content
+    div.w-full.bg-slate-600.p-3.flex.gap-10.justify-center.items-center
+        p.text-2xl.text-bold.text-white #{title} - #[a(href="/item/" + item._id class="text-blue-300") #{item.name} ]
+    p.text-center.text-2xl.py-3.bg-red-200.mb-5 Do you really want to delete this item?
+    div.flex.items-center.flex-col.gap-y-5
+        div.bg-slate-100.rounded-lg.shadow-xl(class='h-min-[450px] w-[250px]')
+            img.w-full.object-contain(src="../../uploads/" + item.image alt=item.name class="h-[297px]")
+            div.flex-col.px-3.gap-1.flex
+                p.text-xl.font-bold #{item.name}
+                p.text-lg #{item.price}
+                p.text-lg Avaliable: #{item.stock}
+                div.flex.flex-wrap
+                    if item.categories
+                        for category in item.categories
+                            a.bg-orange-100.inline-block.p-1.mb-1.mr-1.rounded-md.text-sm(href=category.url class="transition hover:bg-orange-300") #{category.name}
+        form(method='POST' action='')
+            div
+                input(type='hidden' name='itemid', required='true', value=item._id )
+                input(type='hidden' name='imagename', required='true', value=item.image )
+            button.h-12.w-36.bg-red-300.block.rounded-lg.flex.justify-center.items-center(type="submit" class="transition hover:scale-[1.02] hover:bg-red-400") Delete item

@@ -3,7 +3,7 @@ extends layout
 block content 
     div.flex.flex-row.justify-center.mx-auto.my-10.gap-10(class="")
         div.border-r-2.border-orange-200(class="max-w-[30%] max-h-[30%]")
-            img.f-full.h-full.object-contain.px-4(class="")(src="../uploads/" + item.image alt=item.name)
+            img.f-full.h-full.object-contain.px-4(src="../uploads/" + item.image alt=item.name)
         div.flex.flex-col.justify-between
             div.flex.flex-col.gap-2
                 p.text-3xl.font-bold(class="border-b-[1px] border-b-black") #{item.name}
@@ -16,10 +16,8 @@ block content
                         for category in item.categories
                             a.bg-orange-100.inline-block.p-1.mb-1.mr-1.rounded-md.text-sm(href=category.url class="transition hover:bg-orange-300") #{category.name}
                 div.flex.flex-wrap
-                    p.text-lg Brands: 
-                    if item.brand
-                        for brand in item.brand
-                            a.bg-sky-100.inline-block.p-1.mb-1.mr-1.rounded-md.text-sm(href=brand.url class="transition hover:bg-sky-300") #{brand.name}
-            div.flex.flex-col.gap-3
-                a.h-12.w-36.bg-green-300.block.rounded-lg.flex.justify-center.items-center(href=item.url + "/update" class="transition hover:scale-[1.02] hover:bg-green-400") Update item
-                a.h-12.w-36.bg-red-300.block.rounded-lg.flex.justify-center.items-center(href=item.url + "/delete" class="transition hover:scale-[1.02] hover:bg-red-400") Delete item
+                    p.text-lg Brand: 
+                        a.bg-sky-100.inline-block.p-1.mb-1.mr-1.rounded-md.text-sm(href=item.brand.url class="transition hover:bg-sky-300") #{item.brand.name}
+    div.flex.justify-center.gap-x-16
+        a.h-12.w-36.bg-green-300.block.rounded-lg.flex.justify-center.items-center(href=item.url + "/update" class="transition hover:scale-[1.02] hover:bg-green-400") Update item
+        a.h-12.w-36.bg-red-300.block.rounded-lg.flex.justify-center.items-center(href=item.url + "/delete" class="transition hover:scale-[1.02] hover:bg-red-400") Delete item

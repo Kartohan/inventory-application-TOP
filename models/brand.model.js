@@ -10,6 +10,10 @@ const BrandSchema = new Schema({
     type: String,
     required: true,
   },
+  admin: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 BrandSchema.virtual("url").get(function () {

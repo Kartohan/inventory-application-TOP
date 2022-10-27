@@ -1,19 +1,12 @@
 extends layout
 
 block content
+  - const bg = ["bg-gradient-to-r from-cyan-500 to-blue-500", "bg-gradient-to-r from-orange-400 to-red-300", "bg-gradient-to-r from-violet-500 to-fuchsia-500", "bg-gradient-to-r from-fuchsia-400 to-blue-300"]
   div.flex.gap-5.justify-center.flex-wrap.mx-auto.mt-7(class="max-w-[500px]")
-    a(href=brands[0].url) 
-      div.h-28.w-56.rounded-lg.relative.flex.justify-center.items-center.shadow-md.overflow-hidden(class="transition hover:scale-105 hover:shadow-xl bg-gradient-to-r from-cyan-500 to-blue-500")
-        p.text-black.z-10.text-2xl.text-center #{brands[0].name}
-    a(href=brands[1].url) 
-      div.h-28.w-56.rounded-lg.relative.flex.justify-center.items-center.shadow-md.overflow-hidden(class="transition hover:scale-105 hover:shadow-xl bg-gradient-to-r from-orange-400 to-red-300")
-        p.text-black.z-10.text-2xl.text-center #{brands[1].name}
-    a(href=brands[2].url) 
-      div.h-28.w-56.rounded-lg.relative.flex.justify-center.items-center.shadow-md.overflow-hidden(class="transition hover:scale-105 hover:shadow-xl bg-gradient-to-r from-violet-500 to-fuchsia-500")
-        p.text-black.z-10.text-2xl.text-center #{brands[2].name}
-    a(href=brands[3].url) 
-      div.h-28.w-56.rounded-lg.relative.flex.justify-center.items-center.shadow-md.overflow-hidden(class="transition hover:scale-105 hover:shadow-xl bg-gradient-to-r from-fuchsia-400 to-blue-300")
-        p.text-black.z-10.text-2xl.text-center #{brands[3].name}
+    for brand in brands
+      a(href=brands[0].url) 
+        div.h-28.w-56.rounded-lg.relative.flex.justify-center.items-center.shadow-md.overflow-hidden(class="transition hover:scale-105 hover:shadow-xl " + bg[brands.indexOf(brand)])
+          p.text-black.z-10.text-2xl.text-center #{brand.name}
   div.mx-auto.my-7.flex.gap-10.justify-center.flex-wrap(class="max-w-[1000px]")
     for category in categories
         a.h-72.w-56(href=category.url)
