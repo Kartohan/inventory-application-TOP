@@ -11,6 +11,7 @@ What was done:
 3. Image uploading with multer.
 4. Image validation.
 5. Administrator access.
+6. Randomize items on index
 
 What i used:
 
