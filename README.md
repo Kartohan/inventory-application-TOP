@@ -25,7 +25,7 @@ What else can be done:
 1. Different screen support, phone support.
 2. Maybe comments and rate system.
 
-##!!! Important
+## **!!! Important**
 
 I know that Google Chrome throws a warning that your data can be stolen, but I don't know why it does it. If you know how to fix it, write to me in Discord (Kartoshechka#3776) Don't worry, none of your data can be stolen.
 
