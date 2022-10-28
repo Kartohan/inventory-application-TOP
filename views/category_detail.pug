@@ -11,7 +11,7 @@ block content
             a.block(href=item.url)
                 div.bg-slate-100.rounded-lg.shadow-xl.relative(class='h-min-[450px] w-[250px] transition hover:scale-[1.02] hover:shadow-xl hover:ring-1')
                     if item.admin
-                        p.absolute.text-sm.top-2.right-2.bg-slate-400.p-1.bg-opacity-40.rounded-lg  locked
+                        p.absolute.text-sm.top-2.right-2.bg-slate-400.p-1.bg-opacity-40.rounded-lg  Admin
                     img.w-full.object-contain(src="../uploads/" + item.image alt=item.name class="h-[297px]")
                     div.flex-col.px-3.gap-1.flex
                         p.text-xl.font-bold #{item.name}

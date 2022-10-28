@@ -12,7 +12,8 @@ block content
             label(for="name") Name:
             input.w-full.bg-slate-100.p-2.rounded-md(type='text', placeholder='Name' name='name' id="name" required='true' class="focus:outline-none transition hover:shadow-[0px_0px_3px_rgba(0,0,0,0.3)] focus:shadow-[0px_0px_3px_rgba(0,0,0,0.7)]" value=(undefined===brand ? '' : brand.name) )
         div.flex.gap-2.items-center
-            input(type="file" accept="image/png, image/jpeg" required="true" name="brandimage" class="file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:transition file:bg-orange-100 hover:file:bg-orange-300")
+            label(for="image") Brand image:
+            input(type="file" accept="image/png, image/jpeg" required="true" id="image" name="brandimage" class="file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:transition file:bg-orange-100 hover:file:bg-orange-300")
         if errors
             ul.text-red-900.bg-red-200.p-3.rounded-lg
                 for error in errors

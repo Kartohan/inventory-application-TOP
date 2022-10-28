@@ -23,7 +23,7 @@ block content
             if item.admin
                 div.flex.gap-2.items-center
                     label(for="password") Password:
-                    input.w-full.bg-slate-100.p-2.rounded-md(placeholder='Admin password' type="password" id="password" name='password' required='true' class="focus:outline-none transition hover:shadow-[0px_0px_3px_rgba(0,0,0,0.3)] focus:shadow-[0px_0px_3px_rgba(0,0,0,0.7)]")
+                    input.w-full.bg-slate-100.p-2.rounded-md(placeholder='Admin password' type="text" id="password" name='password' required='true' class="focus:outline-none transition hover:shadow-[0px_0px_3px_rgba(0,0,0,0.3)] focus:shadow-[0px_0px_3px_rgba(0,0,0,0.7)]")
             else 
                 input(type='hidden' name='admin', required='true', value="false" )
             div

@@ -1,6 +1,10 @@
 extends layout 
 
-block content 
+block content
+    if item
+        if item.admin
+        div.w-full.bg-blue-200.p-3.flex.gap-10.justify-center.items-center
+            p.text-2xl.text-bold This item is protected by admin
     div.flex.flex-row.justify-center.mx-auto.my-10.gap-10(class="")
         div.border-r-2.border-orange-200(class="max-w-[30%] max-h-[30%]")
             img.f-full.h-full.object-contain.px-4(src="../uploads/" + item.image alt=item.name)
