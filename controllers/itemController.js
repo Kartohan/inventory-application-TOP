@@ -249,10 +249,10 @@ exports.item_delete_get = (req, res, next) => {
 
 // Handle item delete on POST.
 exports.item_delete_post = [
-  body("password").custom((value, { req }) => {
-    if (req.body.admin === "false" && !req.body.password) {
+  body("word").custom((value, { req }) => {
+    if (req.body.admin === "false" && !req.body.word) {
       return true;
-    } else if (req.body.password === process.env.ADMIN) {
+    } else if (req.body.word === process.env.ADMIN) {
       return true;
     } else {
       throw new Error("Wrong password");
@@ -370,10 +370,10 @@ exports.item_update_post = [
     .isLength({ min: 1 })
     .escape(),
   body("stock", "Stock must not be empty").trim().isLength({ min: 0 }).escape(),
-  body("password").custom((value, { req }) => {
-    if (req.body.admin === "false" && !req.body.password) {
+  body("word").custom((value, { req }) => {
+    if (req.body.admin === "false" && !req.body.word) {
       return true;
-    } else if (req.body.password === process.env.ADMIN) {
+    } else if (req.body.word === process.env.ADMIN) {
       return true;
     } else {
       throw new Error("Wrong password");
@@ -408,7 +408,7 @@ exports.item_update_post = [
         typeof req.body.category === "undefined" ? [] : req.body.category,
       image: undefined === req.file ? "" : req.file.filename,
       _id: req.params.id,
-      admin: req.body.password === undefined ? false : true,
+      admin: req.body.word === undefined ? false : true,
     });
 
     if (!errors.isEmpty()) {
