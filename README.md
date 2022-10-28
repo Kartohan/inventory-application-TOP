@@ -32,3 +32,4 @@ I know that Google Chrome throws a warning that your data can be stolen, but I d
 Link - https://warm-shelf-44548.herokuapp.com/
 
 Preview:
+![preview](https://i.imgur.com/it6jky9.png "Application Preview")
