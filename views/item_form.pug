@@ -3,13 +3,17 @@ extends layout
 block content
   div.w-full.bg-slate-600.p-3.flex.gap-10.justify-center.items-center
         p.text-2xl.text-bold.text-white #{title}
+  if item
+    if item.admin
+      div.w-full.bg-blue-200.p-3.flex.gap-10.justify-center.items-center
+          p.text-2xl.text-bold This item is protected by admin
   form.flex.flex-col.gap-3.mx-auto(method='POST' action='' class="max-w-[700px] min-w-[300px] p-2" enctype="multipart/form-data")
     div.flex.gap-2.items-center
         label(for="name") Name:
-        input.w-full.bg-slate-100.p-2.rounded-md(type='text', placeholder='Name' name='name' id="name" required='true' class="focus:outline-none transition hover:shadow-[0px_0px_3px_rgba(0,0,0,0.3)] focus:shadow-[0px_0px_3px_rgba(0,0,0,0.7)]" value=(undefined===item ? '' : item.name) )
+        input.w-full.bg-slate-100.p-2.rounded-md(type='text' placeholder='Name' name='name' id="name" required="true" class="focus:outline-none transition hover:shadow-[0px_0px_3px_rgba(0,0,0,0.3)] focus:shadow-[0px_0px_3px_rgba(0,0,0,0.7)]" value=(undefined===item ? '' : item.name) )
     div.flex.gap-2.items-center
         label(for='brand') Brand:
-        select.w-full.bg-slate-100.p-2.rounded-md(type='select', placeholder='Select brand' name='brand' required='true', class="focus:outline-none transition hover:shadow-[0px_0px_3px_rgba(0,0,0,0.3)] focus:shadow-[0px_0px_3px_rgba(0,0,0,0.7)]")
+        select.w-full.bg-slate-100.p-2.rounded-md(type='select' placeholder='Select brand' name='brand' required='true', class="focus:outline-none transition hover:shadow-[0px_0px_3px_rgba(0,0,0,0.3)] focus:shadow-[0px_0px_3px_rgba(0,0,0,0.7)]")
           for brand in brands
             if item
               option(
@@ -45,7 +49,14 @@ block content
                     input(type='checkbox', name='category', id=category._id, value=category._id, checked=category.checked class="h-5 w-5")
                     label(for=category._id class="checked:bg-slate-300 z-10 relative") #{category.name}
     div.flex.gap-2.items-center
-        input(type="file" accept="image/png, image/jpeg" required="true" name="itemimage" class="file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:transition file:bg-orange-100 hover:file:bg-orange-300")
+        input(type="file" required="true" name="itemimage" accept=".png, .jpg, .jpeg" class="file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:transition file:bg-orange-100 hover:file:bg-orange-300")
+    if item
+      if item.admin
+        div.flex.gap-2.items-center
+          label(for="password") Password:
+          input.w-full.bg-slate-100.p-2.rounded-md(placeholder='Admin password' type="password" id="password" name='password' required='true' class="focus:outline-none transition hover:shadow-[0px_0px_3px_rgba(0,0,0,0.3)] focus:shadow-[0px_0px_3px_rgba(0,0,0,0.7)]")
+    else 
+      input(type='hidden' name='admin', required='true', value="false" )
     if errors
         ul.text-red-900.bg-red-200.p-3.rounded-lg
             for error in errors

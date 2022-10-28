@@ -3,8 +3,12 @@ extends layout
 block content
     div.w-full.bg-slate-600.p-3.flex.gap-10.justify-center.items-center
         p.text-2xl.text-bold.text-white #{title} - #[a(href="/item/" + item._id class="text-blue-300") #{item.name} ]
-    p.text-center.text-2xl.py-3.bg-red-200.mb-5 Do you really want to delete this item?
-    div.flex.items-center.flex-col.gap-y-5
+    if item.admin 
+        div.w-full.bg-blue-200.p-3.flex.gap-10.justify-center.items-center.mb-5
+          p.text-2xl.text-bold This item is protected by admin
+    else 
+        p.text-center.text-2xl.py-3.bg-red-200.mb-5 Do you really want to delete this item?
+    div.flex.items-center.flex-col.gap-y-5.mx-auto(class="max-w-[450px]")
         div.bg-slate-100.rounded-lg.shadow-xl(class='h-min-[450px] w-[250px]')
             img.w-full.object-contain(src="../../uploads/" + item.image alt=item.name class="h-[297px]")
             div.flex-col.px-3.gap-1.flex
@@ -16,9 +20,19 @@ block content
                         for category in item.categories
                             a.bg-orange-100.inline-block.p-1.mb-1.mr-1.rounded-md.text-sm(href=category.url class="transition hover:bg-orange-300") #{category.name}
         form(method='POST' action='')
+            if item.admin
+                div.flex.gap-2.items-center
+                    label(for="password") Password:
+                    input.w-full.bg-slate-100.p-2.rounded-md(placeholder='Admin password' type="password" id="password" name='password' required='true' class="focus:outline-none transition hover:shadow-[0px_0px_3px_rgba(0,0,0,0.3)] focus:shadow-[0px_0px_3px_rgba(0,0,0,0.7)]")
+            else 
+                input(type='hidden' name='admin', required='true', value="false" )
             div
                 input(type='hidden' name='itemid', required='true', value=item._id )
                 input(type='hidden' name='imagename', required='true', value=item.image )
+            if errors
+                ul.text-red-900.bg-red-200.p-3.rounded-lg.self-stretch.my-3
+                    for error in errors
+                        li!= error.msg
             div.flex.gap-x-10.justify-center.my-5
                 button.h-12.w-36.bg-red-300.block.rounded-lg.flex.justify-center.items-center(type="submit" class="transition hover:scale-[1.02] hover:bg-red-400") Delete item
                 a.h-12.w-36.bg-blue-300.block.rounded-lg.flex.justify-center.items-center(href=(undefined===item ? "/item" : item.url) class="transition hover:scale-[1.02] hover:bg-blue-400") Cancel

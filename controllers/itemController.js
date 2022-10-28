@@ -1,20 +1,42 @@
+require("dotenv").config();
 const Item = require("../models/item.model");
 const Brand = require("../models/brand.model");
 const Category = require("../models/category.model");
 const async = require("async");
-const { check, validationResult } = require("express-validator");
+const {
+  check,
+  body,
+  checkSchema,
+  validationResult,
+} = require("express-validator");
 const multer = require("multer");
 const fs = require("fs");
 const path = require("path");
 
-const imageFormatCheck = (req) => {
-  let format = req.file.mimetype.split("/");
+function checkImgErrors(req, file, cb) {
+  let format = file.mimetype.split("/");
   if (format[1] === "jpeg" || format[1] === "png" || format[1] === "jpg") {
-    return false;
+    // req.body.imageError = {
+    //   msg: "File must be .png, .jpg or .jpeg",
+    // };
+    cb(null, true);
   } else {
-    return true;
+    cb(null, false);
   }
-};
+}
+const Storage = multer.diskStorage({
+  destination: "public/uploads",
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + path.extname(file.originalname));
+  },
+});
+const upload = multer({
+  storage: Storage,
+  limits: { fileSize: 1024 * 1024 * 5 },
+  fileFilter(req, file, callback) {
+    checkImgErrors(req, file, callback);
+  },
+});
 
 // Display list of all items.
 exports.item_list = (req, res, next) => {
@@ -83,13 +105,6 @@ exports.item_create_get = (req, res) => {
   );
 };
 
-const Storage = multer.diskStorage({
-  destination: "public/uploads",
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname));
-  },
-});
-const upload = multer({ storage: Storage });
 // Handle item create on POST.
 exports.item_create_post = [
   (req, res, next) => {
@@ -120,6 +135,17 @@ exports.item_create_post = [
     .isLength({ min: 0 })
     .escape(),
   check("category.*").escape(),
+  checkSchema({
+    itemimage: {
+      custom: {
+        options: (value, { req, location, path }) => {
+          return !!req.file;
+        },
+        errorMessage:
+          "You need to upload a product image in format .jpg, .jpeg or .png. File size should be less than 5MB",
+      },
+    },
+  }),
 
   // Process request after validation and sanitization.
   (req, res, next) => {
@@ -134,24 +160,20 @@ exports.item_create_post = [
       stock: req.body.stock,
       brand: req.body.brand,
       categories: req.body.category,
-      image: req.file.filename,
+      image: undefined === req.file ? "" : req.file.filename,
     });
-
-    if (imageFormatCheck(req)) {
-      errors.errors.push({
-        msg: "File format must be .png, .jpg or .jpeg",
-      });
-    }
 
     if (!errors.isEmpty()) {
       // There are errors. Render form again with sanitized values/error messages.
-      fs.unlink(req.file.path, (err) => {
-        if (err) console.log(err.message);
-      });
+      if (!!req.file) {
+        fs.unlink(req.file.path, (err) => {
+          if (err) console.log(err.message);
+        });
+      }
       // Get all categories and brands for form.
       async.parallel(
         {
-          brand(callback) {
+          brands(callback) {
             Brand.find().sort({ name: 1 }).exec(callback);
           },
           categories(callback) {
@@ -171,7 +193,7 @@ exports.item_create_post = [
           }
           res.render("item_form", {
             title: "Create item",
-            brand: results.brand,
+            brands: results.brands,
             categories: results.categories,
             item,
             errors: errors.array(),
@@ -213,18 +235,51 @@ exports.item_delete_get = (req, res) => {
 };
 
 // Handle item delete on POST.
-exports.item_delete_post = (req, res) => {
-  Item.findByIdAndRemove(req.body.itemid, (err) => {
-    if (err) {
-      return next(err);
+exports.item_delete_post = [
+  body("password").custom((value, { req }) => {
+    if (req.body.admin === "false" && !req.body.password) {
+      return true;
+    } else if (req.body.password === process.env.ADMIN) {
+      return true;
+    } else {
+      throw new Error("Wrong password");
     }
-    fs.unlink(path.join("public/uploads", req.body.imagename), (err) => {
-      if (err) console.log(err.message);
+  }),
+  (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      Item.findById(req.params.id)
+        .populate("categories")
+        .exec((err, item) => {
+          if (err) {
+            return next(err);
+          }
+          if (item == null) {
+            // No results.
+            res.redirect("/item");
+          }
+          // Successful, so render.
+          res.render("item_delete", {
+            title: "Delete Item",
+            item: item,
+            errors: errors.array(),
+          });
+        });
+      return;
+    }
+
+    Item.findByIdAndRemove(req.body.itemid, (err) => {
+      if (err) {
+        return next(err);
+      }
+      fs.unlink(path.join("public/uploads", req.body.imagename), (err) => {
+        if (err) console.log(err.message);
+      });
+      // Success - go to item list
+      res.redirect("/item");
     });
-    // Success - go to item list
-    res.redirect("/item");
-  });
-};
+  },
+];
 
 // Display item update form on GET.
 exports.item_update_get = (req, res, next) => {
@@ -282,24 +337,41 @@ exports.item_update_post = [
 
   // Validate and sanitize fields.
   upload.single("itemimage"),
-  check("name", "Name must not be empty.").trim().isLength({ min: 1 }).escape(),
-  check("brand", "Brand must not be empty.")
+  body("name", "Name must not be empty.").trim().isLength({ min: 1 }).escape(),
+  body("brand", "Brand must not be empty.")
     .trim()
     .isLength({ min: 1 })
     .escape(),
-  check("price", "Price must not be empty.")
+  body("price", "Price must not be empty.")
     .trim()
     .isLength({ min: 0 })
     .escape(),
-  check("description", "Description must not be empty.")
+  body("description", "Description must not be empty.")
     .trim()
     .isLength({ min: 1 })
     .escape(),
-  check("stock", "Stock must not be empty")
-    .trim()
-    .isLength({ min: 0 })
-    .escape(),
-  check("category.*").escape(),
+  body("stock", "Stock must not be empty").trim().isLength({ min: 0 }).escape(),
+  body("password").custom((value, { req }) => {
+    if (req.body.admin === "false" && !req.body.password) {
+      return true;
+    } else if (req.body.password === process.env.ADMIN) {
+      return true;
+    } else {
+      throw new Error("Wrong password");
+    }
+  }),
+  body("category.*").escape(),
+  checkSchema({
+    itemimage: {
+      custom: {
+        options: (value, { req, location, path }) => {
+          return !!req.file;
+        },
+        errorMessage:
+          "You need to upload a product image in format .jpg, .jpeg or .png. File size should be less than 5MB",
+      },
+    },
+  }),
 
   // Process request after validation and sanitization.
   (req, res, next) => {
@@ -315,25 +387,22 @@ exports.item_update_post = [
       brand: req.body.brand,
       categories:
         typeof req.body.category === "undefined" ? [] : req.body.category,
-      image: req.file.filename,
+      image: undefined === req.file ? "" : req.file.filename,
       _id: req.params.id,
+      admin: req.body.password === undefined ? false : true,
     });
-
-    if (imageFormatCheck(req)) {
-      errors.errors.push({
-        msg: "File format must be .png, .jpg or .jpeg",
-      });
-    }
 
     if (!errors.isEmpty()) {
       // There are errors. Render form again with sanitized values/error messages.
-      fs.unlink(req.file.path, (err) => {
-        if (err) console.log(err.message);
-      });
+      if (!!req.file) {
+        fs.unlink(req.file.path, (err) => {
+          if (err) console.log(err.message);
+        });
+      }
       // Get all categories and brands for form.
       async.parallel(
         {
-          brand(callback) {
+          brands(callback) {
             Brand.find().sort({ name: 1 }).exec(callback);
           },
           categories(callback) {
@@ -353,7 +422,7 @@ exports.item_update_post = [
           }
           res.render("item_form", {
             title: "Update item",
-            brand: results.brand,
+            brands: results.brands,
             categories: results.categories,
             item,
             errors: errors.array(),
