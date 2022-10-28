@@ -20,10 +20,13 @@ app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "pug");
 
 //mongodb connection
+const mongoDB = process.env.MONGODB_URI;
 mongoose
-  .connect(process.env.MONGODB_URL)
+  .connect(mongoDB, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log("Connected to db"))
   .catch((err) => console.log(err.message));
+const db = mongoose.connection;
+db.on("error", console.error.bind(console, "MongoDB connection error:"));
 
 app.use(compression());
 app.use(helmet());

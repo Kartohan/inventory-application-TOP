@@ -50,7 +50,3 @@ exports.index = function (req, res) {
     }
   );
 };
-
-exports.templates = function (req, res) {
-  res.render("templates");
-};
