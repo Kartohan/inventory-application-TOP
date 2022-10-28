@@ -10,6 +10,8 @@ const brandRouter = require("./routes/brand");
 const categoryRouter = require("./routes/category");
 const itemRouter = require("./routes/item");
 const { default: mongoose } = require("mongoose");
+const compression = require("compression");
+const helmet = require("helmet");
 
 const app = express();
 
@@ -23,6 +25,8 @@ mongoose
   .then(() => console.log("Connected to db"))
   .catch((err) => console.log(err.message));
 
+app.use(compression());
+app.use(helmet());
 app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));

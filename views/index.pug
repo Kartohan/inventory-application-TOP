@@ -11,5 +11,5 @@ block content
     for category in categories
         a.h-72.w-56(href=category.url)
             div.h-72.w-56.rounded-lg.relative.flex.justify-center.items-center.shadow-md.ring-1.overflow-hidden(class="transition hover:scale-105 hover:shadow-xl")
-                img.absolute.object-contain.h-full.w-full.p-2(src="uploads/" + category.image, alt=category.name)(class="hover:blur-[2px]")
+                img.absolute.object-contain.h-full.w-full.p-2(src="uploads/" + category.image, alt=category.name class="hover:blur-[2px]")
                 p.text-white.z-10.text-2xl.text-center.pointer-events-none(class="catalog-text") #{category.name + "s"}
