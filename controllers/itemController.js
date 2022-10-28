@@ -12,6 +12,7 @@ const {
 const multer = require("multer");
 const fs = require("fs");
 const path = require("path");
+const mongoose = require("mongoose");
 
 function checkImgErrors(req, file, cb) {
   let format = file.mimetype.split("/");
@@ -56,6 +57,12 @@ exports.item_list = (req, res, next) => {
 
 // Display detail page for a specific item.
 exports.item_detail = (req, res, next) => {
+  const isObjectId = mongoose.Types.ObjectId.isValid(req.params.id);
+  if (!isObjectId) {
+    var err = new Error("Item not found");
+    err.status = 404;
+    return next(err);
+  }
   Item.findById(req.params.id)
     .populate("categories")
     .populate("brand")
@@ -215,7 +222,13 @@ exports.item_create_post = [
 ];
 
 // Display item delete form on GET.
-exports.item_delete_get = (req, res) => {
+exports.item_delete_get = (req, res, next) => {
+  const isObjectId = mongoose.Types.ObjectId.isValid(req.params.id);
+  if (!isObjectId) {
+    var err = new Error("Item not found");
+    err.status = 404;
+    return next(err);
+  }
   Item.findById(req.params.id)
     .populate("categories")
     .exec((err, item) => {
@@ -283,6 +296,12 @@ exports.item_delete_post = [
 
 // Display item update form on GET.
 exports.item_update_get = (req, res, next) => {
+  const isObjectId = mongoose.Types.ObjectId.isValid(req.params.id);
+  if (!isObjectId) {
+    var err = new Error("Item not found");
+    err.status = 404;
+    return next(err);
+  }
   async.parallel(
     {
       brands(callback) {

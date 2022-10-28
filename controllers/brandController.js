@@ -5,6 +5,7 @@ const { check, validationResult } = require("express-validator");
 const multer = require("multer");
 const fs = require("fs");
 const path = require("path");
+const mongoose = require("mongoose");
 
 const imageFormatCheck = (req) => {
   let format = req.file.mimetype.split("/");
@@ -31,6 +32,12 @@ exports.brand_list = (req, res) => {
 
 // Display detail page for a specific Brand.
 exports.brand_detail = (req, res, next) => {
+  const isObjectId = mongoose.Types.ObjectId.isValid(req.params.id);
+  if (!isObjectId) {
+    var err = new Error("Brand not found");
+    err.status = 404;
+    return next(err);
+  }
   async.parallel(
     {
       brand: function (callback) {
@@ -133,7 +140,13 @@ exports.brand_create_post = [
 ];
 
 // Display Brand delete form on GET.
-exports.brand_delete_get = (req, res) => {
+exports.brand_delete_get = (req, res, next) => {
+  const isObjectId = mongoose.Types.ObjectId.isValid(req.params.id);
+  if (!isObjectId) {
+    var err = new Error("Brand not found");
+    err.status = 404;
+    return next(err);
+  }
   async.parallel(
     {
       brand: function (callback) {
@@ -167,7 +180,7 @@ exports.brand_delete_get = (req, res) => {
 };
 
 // Handle Brand delete on POST.
-exports.brand_delete_post = (req, res) => {
+exports.brand_delete_post = (req, res, next) => {
   async.parallel(
     {
       brand: function (callback) {
@@ -209,7 +222,13 @@ exports.brand_delete_post = (req, res) => {
 };
 
 // Display Brand update form on GET.
-exports.brand_update_get = (req, res) => {
+exports.brand_update_get = (req, res, next) => {
+  const isObjectId = mongoose.Types.ObjectId.isValid(req.params.id);
+  if (!isObjectId) {
+    var err = new Error("Brand not found");
+    err.status = 404;
+    return next(err);
+  }
   Brand.findById(req.params.id).exec((err, brand) => {
     if (err) {
       return next(err);

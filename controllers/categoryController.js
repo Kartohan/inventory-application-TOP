@@ -5,6 +5,7 @@ const { check, validationResult } = require("express-validator");
 const multer = require("multer");
 const fs = require("fs");
 const path = require("path");
+const mongoose = require("mongoose");
 
 const imageFormatCheck = (req) => {
   let format = req.file.mimetype.split("/");
@@ -31,6 +32,12 @@ exports.category_list = (req, res, next) => {
 
 // Display detail page for a specific category.
 exports.category_detail = (req, res, next) => {
+  const isObjectId = mongoose.Types.ObjectId.isValid(req.params.id);
+  if (!isObjectId) {
+    var err = new Error("Category not found");
+    err.status = 404;
+    return next(err);
+  }
   async.parallel(
     {
       category: function (callback) {
@@ -134,6 +141,12 @@ exports.category_create_post = [
 
 // Display category delete form on GET.
 exports.category_delete_get = (req, res, next) => {
+  const isObjectId = mongoose.Types.ObjectId.isValid(req.params.id);
+  if (!isObjectId) {
+    var err = new Error("Category not found");
+    err.status = 404;
+    return next(err);
+  }
   async.parallel(
     {
       category: function (callback) {
@@ -210,6 +223,12 @@ exports.category_delete_post = (req, res, next) => {
 
 // Display category update form on GET.
 exports.category_update_get = (req, res, next) => {
+  const isObjectId = mongoose.Types.ObjectId.isValid(req.params.id);
+  if (!isObjectId) {
+    var err = new Error("Category not found");
+    err.status = 404;
+    return next(err);
+  }
   Category.findById(req.params.id).exec((err, category) => {
     if (err) {
       return next(err);

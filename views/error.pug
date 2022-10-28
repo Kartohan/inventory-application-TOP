@@ -1,6 +1,7 @@
 extends layout
 
 block content
-  h1= message
-  h2= error.status
-  pre #{error.stack}
+  div.bg-slate-200.block.flex.justify-center.items-center.flex-col.my-10.mx-auto.rounded-xl.gap-10(class="w-[95%]")
+    h1.text-4xl.mt-5= message
+    h2.text-5xl= error.status
+    pre.mb-5 #{error.stack}
