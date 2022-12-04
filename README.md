@@ -26,11 +26,7 @@ What else can be done:
 1. Different screen support, phone support.
 2. Maybe comments and rate system.
 
-### **!!! Important !!!**
-
-I know that Google Chrome throws a warning that your data can be stolen, but I don't know why it does it. If you know how to fix it, write to me in Discord (Kartoshechka#3776) Don't worry, none of your data can be stolen.
-
-Link - https://warm-shelf-44548.herokuapp.com/
+Link - https://inventory-application-top-production.up.railway.app
 
 Preview:
 ![preview](https://i.imgur.com/it6jky9.png "Application Preview")
