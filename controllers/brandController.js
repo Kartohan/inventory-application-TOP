@@ -7,7 +7,12 @@ const multer = require("multer");
 const fs = require("fs");
 const path = require("path");
 const mongoose = require("mongoose");
-const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
+const {
+  S3Client,
+  PutObjectCommand,
+  GetObjectCommand,
+} = require("@aws-sdk/client-s3");
+const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 
 const imageFormatCheck = (req) => {
   let format = req.file.mimetype.split("/");
@@ -32,16 +37,31 @@ const s3 = new S3Client({
 });
 
 // Display list of all Brands.
-exports.brand_list = (req, res) => {
-  Brand.find().exec((err, brands) => {
-    if (err) {
-      // Error in API usage.
-      return next(err);
-    }
-    res.render("brand_list", {
-      title: "Brand list",
-      brands: brands,
-    });
+exports.brand_list = async (req, res) => {
+  const brands = await Brand.find();
+  // console.log(brands);
+  // Brand.find().exec(async (err, brands) => {
+  //   if (err) {
+  //     // Error in API usage.
+  //     return next(err);
+  //   }
+  //   res.render("brand_list", {
+  //     title: "Brand list",
+  //     brands: brands,
+  //   });
+  // });
+  for (const brand of brands) {
+    const getObjectParams = {
+      Bucket: bucketName,
+      Key: brand.image,
+    };
+    const command = new GetObjectCommand(getObjectParams);
+    const url = await getSignedUrl(s3, command, { expiresIn: 3600 });
+    brand.imageUrl = url;
+  }
+  res.render("brand_list", {
+    title: "Brand list",
+    brands: brands,
   });
 };
 
@@ -118,9 +138,11 @@ exports.brand_create_post = [
     const errors = validationResult(req);
 
     // Create a brand object with escaped and trimmed data.
+    let filename = req.file.originalname;
+    filename = Date.now() + path.extname(req.file.originalname);
     const brand = new Brand({
       name: req.body.name,
-      image: "123",
+      image: filename,
     });
 
     if (imageFormatCheck(req)) {
@@ -140,7 +162,7 @@ exports.brand_create_post = [
     } else {
       // Data from form is valid.
       // Check if brand with same name already exists.
-      Brand.findOne({ name: req.body.name }).exec((err, found_brand) => {
+      Brand.findOne({ name: req.body.name }).exec(async (err, found_brand) => {
         if (err) {
           return next(err);
         }
@@ -148,6 +170,14 @@ exports.brand_create_post = [
           // brand exists, redirect to its detail page.
           res.redirect(found_brand.url);
         } else {
+          const params = {
+            Bucket: bucketName,
+            Key: filename,
+            Body: req.file.buffer,
+            Type: req.file.mimetype,
+          };
+          const command = new PutObjectCommand(params);
+          await s3.send(command);
           brand.save((err) => {
             if (err) {
               return next(err);
