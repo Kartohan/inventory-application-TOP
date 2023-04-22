@@ -13,29 +13,49 @@ const multer = require("multer");
 const fs = require("fs");
 const path = require("path");
 const mongoose = require("mongoose");
+const {
+  S3Client,
+  PutObjectCommand,
+  GetObjectCommand,
+  DeleteObjectCommand,
+} = require("@aws-sdk/client-s3");
+const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 
-function checkImgErrors(req, file, cb) {
-  let format = file.mimetype.split("/");
+const imageFormatCheck = (req) => {
+  let format = req.file.mimetype.split("/");
   if (format[1] === "jpeg" || format[1] === "png" || format[1] === "jpg") {
-    // req.body.imageError = {
-    //   msg: "File must be .png, .jpg or .jpeg",
-    // };
-    cb(null, true);
+    return false;
   } else {
-    cb(null, false);
+    return true;
   }
-}
-const Storage = multer.diskStorage({
-  destination: "public/uploads",
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname));
+};
+
+const bucketName = process.env.AWS_BUCKET_NAME;
+const bucketRegion = process.env.AWS_BUCKET_REGION;
+const accessKey = process.env.AWS_ACCESS_KEY;
+const secretKey = process.env.AWS_SECRET_KEY;
+
+const s3 = new S3Client({
+  credentials: {
+    accessKeyId: accessKey,
+    secretAccessKey: secretKey,
   },
+  region: bucketRegion,
 });
+// const Storage = multer.diskStorage({
+//   destination: "public/uploads",
+//   filename: (req, file, cb) => {
+//     cb(null, Date.now() + path.extname(file.originalname));
+//   },
+// });
 const upload = multer({
-  storage: Storage,
-  limits: { fileSize: 1024 * 1024 * 5 },
-  fileFilter(req, file, callback) {
-    checkImgErrors(req, file, callback);
+  storage: multer.memoryStorage({
+    filename: (req, file, cb) => {
+      cb(null, Date.now() + path.extname(file.originalname));
+    },
+  }),
+  limits: {
+    fileSize: 5 * 1024 * 1024,
   },
 });
 
@@ -43,10 +63,19 @@ const upload = multer({
 exports.item_list = (req, res, next) => {
   Item.find()
     .populate("categories")
-    .exec((err, items) => {
+    .exec(async (err, items) => {
       if (err) {
         // Error in API usage.
         return next(err);
+      }
+      for (const item of items) {
+        const getObjectParams = {
+          Bucket: bucketName,
+          Key: item.image,
+        };
+        const command = new GetObjectCommand(getObjectParams);
+        const url = await getSignedUrl(s3, command, { expiresIn: 3600 });
+        item.imageUrl = url;
       }
       res.render("item_list", {
         title: "Item List",
@@ -66,11 +95,18 @@ exports.item_detail = (req, res, next) => {
   Item.findById(req.params.id)
     .populate("categories")
     .populate("brand")
-    .exec((err, item) => {
+    .exec(async (err, item) => {
       if (err) {
         // Error in API usage.
         return next(err);
       }
+      const getObjectParams = {
+        Bucket: bucketName,
+        Key: item.image,
+      };
+      const command = new GetObjectCommand(getObjectParams);
+      const url = await getSignedUrl(s3, command, { expiresIn: 3600 });
+      item.imageUrl = url;
       res.render("item_detail", {
         title: "Item Detail",
         item: item,
@@ -158,7 +194,8 @@ exports.item_create_post = [
   (req, res, next) => {
     // Extract the validation errors from a request.
     const errors = validationResult(req);
-
+    let filename = req.file.originalname;
+    filename = Date.now() + path.extname(req.file.originalname);
     // Create a item object with escaped and trimmed data.
     const item = new Item({
       name: req.body.name,
@@ -167,16 +204,22 @@ exports.item_create_post = [
       stock: req.body.stock,
       brand: req.body.brand,
       categories: req.body.category,
-      image: undefined === req.file ? "" : req.file.filename,
+      image: undefined === req.file ? "" : filename,
     });
+
+    if (imageFormatCheck(req)) {
+      errors.errors.push({
+        msg: "File format must be .png, .jpg or .jpeg",
+      });
+    }
 
     if (!errors.isEmpty()) {
       // There are errors. Render form again with sanitized values/error messages.
-      if (!!req.file) {
-        fs.unlink(req.file.path, (err) => {
-          if (err) console.log(err.message);
-        });
-      }
+      // if (!!req.file) {
+      //   fs.unlink(req.file.path, (err) => {
+      //     if (err) console.log(err.message);
+      //   });
+      // }
       // Get all categories and brands for form.
       async.parallel(
         {
@@ -211,7 +254,15 @@ exports.item_create_post = [
     }
 
     // Data from form is valid. Save item.
-    item.save((err) => {
+    item.save(async (err) => {
+      const params = {
+        Bucket: bucketName,
+        Key: filename,
+        Body: req.file.buffer,
+        Type: req.file.mimetype,
+      };
+      const command = new PutObjectCommand(params);
+      await s3.send(command);
       if (err) {
         return next(err);
       }
@@ -231,7 +282,7 @@ exports.item_delete_get = (req, res, next) => {
   }
   Item.findById(req.params.id)
     .populate("categories")
-    .exec((err, item) => {
+    .exec(async (err, item) => {
       if (err) {
         return next(err);
       }
@@ -239,6 +290,13 @@ exports.item_delete_get = (req, res, next) => {
         // No results.
         res.redirect("/item");
       }
+      const getObjectParams = {
+        Bucket: bucketName,
+        Key: item.image,
+      };
+      const command = new GetObjectCommand(getObjectParams);
+      const url = await getSignedUrl(s3, command, { expiresIn: 3600 });
+      item.imageUrl = url;
       // Successful, so render.
       res.render("item_delete", {
         title: "Delete Item",
@@ -281,13 +339,19 @@ exports.item_delete_post = [
       return;
     }
 
-    Item.findByIdAndRemove(req.body.itemid, (err) => {
+    Item.findById(req.params.id, async (err, item) => {
+      const deleteObjectParams = {
+        Bucket: bucketName,
+        Key: item.image,
+      };
+      const command = new DeleteObjectCommand(deleteObjectParams);
+      await s3.send(command);
+    });
+
+    Item.findByIdAndRemove(req.body.itemid, async (err) => {
       if (err) {
         return next(err);
       }
-      fs.unlink(path.join("public/uploads", req.body.imagename), (err) => {
-        if (err) console.log(err.message);
-      });
       // Success - go to item list
       res.redirect("/item");
     });
@@ -396,7 +460,8 @@ exports.item_update_post = [
   (req, res, next) => {
     // Extract the validation errors from a request.
     const errors = validationResult(req);
-
+    let filename = req.file.originalname;
+    filename = Date.now() + path.extname(req.file.originalname);
     // Create a item object with escaped and trimmed data.
     const item = new Item({
       name: req.body.name,
@@ -406,18 +471,24 @@ exports.item_update_post = [
       brand: req.body.brand,
       categories:
         typeof req.body.category === "undefined" ? [] : req.body.category,
-      image: undefined === req.file ? "" : req.file.filename,
+      image: undefined === req.file ? "" : filename,
       _id: req.params.id,
       admin: req.body.word === undefined ? false : true,
     });
 
+    if (imageFormatCheck(req)) {
+      errors.errors.push({
+        msg: "File format must be .png, .jpg or .jpeg",
+      });
+    }
+
     if (!errors.isEmpty()) {
       // There are errors. Render form again with sanitized values/error messages.
-      if (!!req.file) {
-        fs.unlink(req.file.path, (err) => {
-          if (err) console.log(err.message);
-        });
-      }
+      // if (!!req.file) {
+      //   fs.unlink(req.file.path, (err) => {
+      //     if (err) console.log(err.message);
+      //   });
+      // }
       // Get all categories and brands for form.
       async.parallel(
         {
@@ -451,17 +522,28 @@ exports.item_update_post = [
       return;
     }
 
-    Item.findById(req.params.id, (err, item) => {
-      fs.unlink(path.join("public/uploads", item.image), (err) => {
-        if (err) console.log(err.message);
-      });
+    Item.findById(req.params.id, async (err, item) => {
+      const deleteObjectParams = {
+        Bucket: bucketName,
+        Key: item.image,
+      };
+      const command = new DeleteObjectCommand(deleteObjectParams);
+      await s3.send(command);
     });
 
     // Data from form is valid. Update the record.
-    Item.findByIdAndUpdate(req.params.id, item, {}, (err, theitem) => {
+    Item.findByIdAndUpdate(req.params.id, item, {}, async (err, theitem) => {
       if (err) {
         return next(err);
       }
+      const params = {
+        Bucket: bucketName,
+        Key: filename,
+        Body: req.file.buffer,
+        Type: req.file.mimetype,
+      };
+      const command = new PutObjectCommand(params);
+      await s3.send(command);
       // Successful: redirect to book detail page.
       res.redirect(theitem.url);
     });
