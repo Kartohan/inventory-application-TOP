@@ -275,19 +275,19 @@ exports.brand_delete_post = (req, res, next) => {
         return;
       }
 
-      Brand.findById(req.params.id, async (err, brand) => {
-        const deleteObjectParams = {
-          Bucket: bucketName,
-          Key: brand.image,
-        };
-        const command = new DeleteObjectCommand(deleteObjectParams);
-        await s3.send(command);
-      });
+      Brand.findById(req.params.id, async (err, brand) => {});
       // Brand has no items. Delete an object and redirect
-      Brand.findByIdAndRemove(req.body.brandid, async (err) => {
+      Brand.findByIdAndRemove(req.body.brandid, async (err, deletebrand) => {
         if (err) {
           return next(err);
         }
+        const deleteObjectParams = {
+          Bucket: bucketName,
+          Key: deletebrand.image,
+        };
+        const command = new DeleteObjectCommand(deleteObjectParams);
+        await s3.send(command);
+        console.log(deletebrand);
         // Success - go to item list
         res.redirect("/brand");
       });
@@ -359,14 +359,7 @@ exports.brand_update_post = [
       return;
     } else {
       // Data from form is valid.
-      Brand.findById(req.params.id, async (err, brand) => {
-        const deleteObjectParams = {
-          Bucket: bucketName,
-          Key: brand.image,
-        };
-        const command = new DeleteObjectCommand(deleteObjectParams);
-        await s3.send(command);
-      });
+      Brand.findById(req.params.id, async (err, brand) => {});
 
       // Data from form is valid. Update the record.
       Brand.findByIdAndUpdate(
@@ -377,6 +370,12 @@ exports.brand_update_post = [
           if (err) {
             return next(err);
           }
+          const deleteObjectParams = {
+            Bucket: bucketName,
+            Key: thebrand.image,
+          };
+          const deletecommand = new DeleteObjectCommand(deleteObjectParams);
+          await s3.send(deletecommand);
           const params = {
             Bucket: bucketName,
             Key: filename,

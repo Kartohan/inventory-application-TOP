@@ -10,6 +10,7 @@ const {
   S3Client,
   PutObjectCommand,
   GetObjectCommand,
+  DeleteObjectCommand,
 } = require("@aws-sdk/client-s3");
 const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 
@@ -216,7 +217,7 @@ exports.category_delete_get = (req, res, next) => {
           .exec(callback);
       },
     },
-    function (err, results) {
+    async function (err, results) {
       if (err) {
         return next(err);
       }
@@ -226,6 +227,22 @@ exports.category_delete_get = (req, res, next) => {
         err.status = 404;
         return next(err);
       }
+      for (const item of results.category_items) {
+        const getObjectParams = {
+          Bucket: bucketName,
+          Key: item.image,
+        };
+        const command = new GetObjectCommand(getObjectParams);
+        const url = await getSignedUrl(s3, command, { expiresIn: 3600 });
+        item.imageUrl = url;
+      }
+      const getObjectParams = {
+        Bucket: bucketName,
+        Key: results.category.image,
+      };
+      const command = new GetObjectCommand(getObjectParams);
+      const url = await getSignedUrl(s3, command, { expiresIn: 3600 });
+      results.category.imageUrl = url;
       // Successful, so render
       res.render("category_delete", {
         title: "Delete category",
@@ -264,16 +281,22 @@ exports.category_delete_post = (req, res, next) => {
         return;
       }
       // Category has no items. Delete an object and redirect
-      Category.findByIdAndRemove(req.body.categoryid, (err) => {
-        if (err) {
-          return next(err);
+      Category.findByIdAndRemove(
+        req.body.categoryid,
+        async (err, deletecategory) => {
+          if (err) {
+            return next(err);
+          }
+          const deleteObjectParams = {
+            Bucket: bucketName,
+            Key: deletecategory.image,
+          };
+          const command = new DeleteObjectCommand(deleteObjectParams);
+          await s3.send(command);
+          // Success - go to item list
+          res.redirect("/category");
         }
-        fs.unlink(path.join("public/uploads", req.body.imagename), (err) => {
-          if (err) console.log(err.message);
-        });
-        // Success - go to item list
-        res.redirect("/category");
-      });
+      );
     }
   );
 };
@@ -313,12 +336,17 @@ exports.category_update_post = [
     // Extract the validation errors from a request.
     const errors = validationResult(req);
 
+    let filename = req.file.originalname;
+    filename = Date.now() + path.extname(req.file.originalname);
+
     // Create a brand object with escaped and trimmed data.
     const category = new Category({
       name: req.body.name,
-      image: req.file.filename,
+      image: filename,
       _id: req.params.id,
     });
+
+    console.log(`New categoy image first ${category.image}`);
 
     if (imageFormatCheck(req)) {
       errors.errors.push({
@@ -327,9 +355,9 @@ exports.category_update_post = [
     }
 
     if (!errors.isEmpty()) {
-      fs.unlink(req.file.path, (err) => {
-        if (err) console.log(err.message);
-      });
+      // fs.unlink(req.file.path, (err) => {
+      //   if (err) console.log(err.message);
+      // });
       // There are errors. Render the form again with sanitized values/error messages.
       res.render("category_form", {
         title: "Create Category",
@@ -338,22 +366,30 @@ exports.category_update_post = [
       });
       return;
     } else {
-      // Data from form is valid.
-      Category.findById(req.params.id, (err, category) => {
-        fs.unlink(path.join("public/uploads", category.image), (err) => {
-          if (err) console.log(err.message);
-        });
-      });
-
       // Data from form is valid. Update the record.
       Category.findByIdAndUpdate(
         req.params.id,
         category,
         {},
-        (err, thecategory) => {
+        async (err, thecategory) => {
           if (err) {
             return next(err);
           }
+          const deleteObjectParams = {
+            Bucket: bucketName,
+            Key: thecategory.image,
+          };
+          const deletecommand = new DeleteObjectCommand(deleteObjectParams);
+          console.log(`Deleted image ${thecategory.image}`);
+          await s3.send(deletecommand);
+          const params = {
+            Bucket: bucketName,
+            Key: filename,
+            Body: req.file.buffer,
+            Type: req.file.mimetype,
+          };
+          const command = new PutObjectCommand(params);
+          await s3.send(command);
           // Successful: redirect to book detail page.
           res.redirect(thecategory.url);
         }

@@ -339,19 +339,16 @@ exports.item_delete_post = [
       return;
     }
 
-    Item.findById(req.params.id, async (err, item) => {
-      const deleteObjectParams = {
-        Bucket: bucketName,
-        Key: item.image,
-      };
-      const command = new DeleteObjectCommand(deleteObjectParams);
-      await s3.send(command);
-    });
-
-    Item.findByIdAndRemove(req.body.itemid, async (err) => {
+    Item.findByIdAndRemove(req.body.itemid, async (err, deleteitem) => {
       if (err) {
         return next(err);
       }
+      const deleteObjectParams = {
+        Bucket: bucketName,
+        Key: deleteitem.image,
+      };
+      const command = new DeleteObjectCommand(deleteObjectParams);
+      await s3.send(command);
       // Success - go to item list
       res.redirect("/item");
     });
@@ -522,20 +519,17 @@ exports.item_update_post = [
       return;
     }
 
-    Item.findById(req.params.id, async (err, item) => {
-      const deleteObjectParams = {
-        Bucket: bucketName,
-        Key: item.image,
-      };
-      const command = new DeleteObjectCommand(deleteObjectParams);
-      await s3.send(command);
-    });
-
     // Data from form is valid. Update the record.
     Item.findByIdAndUpdate(req.params.id, item, {}, async (err, theitem) => {
       if (err) {
         return next(err);
       }
+      const deleteObjectParams = {
+        Bucket: bucketName,
+        Key: theitem.image,
+      };
+      const deletecommand = new DeleteObjectCommand(deleteObjectParams);
+      await s3.send(deletecommand);
       const params = {
         Bucket: bucketName,
         Key: filename,
