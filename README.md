@@ -1,5 +1,8 @@
 # inventory-app-TOP-project
 
+04.03.23 Update
+s3 bucket + multer for image storage is here! I think i should add s3 to some my other projects too, instead of server it only with multer local storage.
+
 I did it!
 It was very interesting. I learned a lot of things during this project. The most difficult part was working with the module "multer" and "express-validator" It took me many hours to understand how to properly validate images. I'm very happy to present my project to you!
 
