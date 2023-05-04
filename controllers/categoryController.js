@@ -6,6 +6,12 @@ const multer = require("multer");
 const fs = require("fs");
 const path = require("path");
 const mongoose = require("mongoose");
+const {
+  S3Client,
+  PutObjectCommand,
+  GetObjectCommand,
+} = require("@aws-sdk/client-s3");
+const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 
 const imageFormatCheck = (req) => {
   let format = req.file.mimetype.split("/");
@@ -16,17 +22,40 @@ const imageFormatCheck = (req) => {
   }
 };
 
+const bucketName = process.env.AWS_BUCKET_NAME;
+const bucketRegion = process.env.AWS_BUCKET_REGION;
+const accessKey = process.env.AWS_ACCESS_KEY;
+const secretKey = process.env.AWS_SECRET_KEY;
+
+const s3 = new S3Client({
+  credentials: {
+    accessKeyId: accessKey,
+    secretAccessKey: secretKey,
+  },
+  region: bucketRegion,
+});
+
 // Display list of all categories.
-exports.category_list = (req, res, next) => {
-  Category.find().exec((err, categories) => {
-    if (err) {
-      // Error in API usage.
-      return next(err);
-    }
-    res.render("category_list", {
-      title: "Category list",
-      categories: categories,
-    });
+exports.category_list = async (req, res, next) => {
+  const categories = await Category.find();
+  // Category.find().exec((err, categories) => {
+  //   if (err) {
+  //     // Error in API usage.
+  //     return next(err);
+  //   }
+  // });
+  for (const category of categories) {
+    const getObjectParams = {
+      Bucket: bucketName,
+      Key: category.image,
+    };
+    const command = new GetObjectCommand(getObjectParams);
+    const url = await getSignedUrl(s3, command, { expiresIn: 3600 });
+    category.imageUrl = url;
+  }
+  res.render("category_list", {
+    title: "Category list",
+    categories: categories,
   });
 };
 
@@ -50,7 +79,7 @@ exports.category_detail = (req, res, next) => {
           .exec(callback);
       },
     },
-    function (err, results) {
+    async function (err, results) {
       if (err) {
         return next(err);
       }
@@ -61,6 +90,15 @@ exports.category_detail = (req, res, next) => {
         return next(err);
       }
       // Successful, so render
+      for (const item of results.category_items) {
+        const getObjectParams = {
+          Bucket: bucketName,
+          Key: item.image,
+        };
+        const command = new GetObjectCommand(getObjectParams);
+        const url = await getSignedUrl(s3, command, { expiresIn: 3600 });
+        item.imageUrl = url;
+      }
       res.render("category_detail", {
         title: "Category Detail",
         category: results.category,
@@ -75,14 +113,23 @@ exports.category_create_get = (req, res) => {
   res.render("category_form", { title: "Create Category" });
 };
 
-const Storage = multer.diskStorage({
-  destination: "public/uploads",
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname));
+// const Storage = multer.diskStorage({
+//   destination: "public/uploads",
+//   filename: (req, file, cb) => {
+//     cb(null, Date.now() + path.extname(file.originalname));
+//   },
+// });
+// const upload = multer({ storage: Storage });
+const upload = multer({
+  storage: multer.memoryStorage({
+    filename: (req, file, cb) => {
+      cb(null, Date.now() + path.extname(file.originalname));
+    },
+  }),
+  limits: {
+    fileSize: 5 * 1024 * 1024,
   },
 });
-const upload = multer({ storage: Storage });
-
 // Handle category create on POST.
 exports.category_create_post = [
   upload.single("categoryimage"),
@@ -93,9 +140,12 @@ exports.category_create_post = [
     const errors = validationResult(req);
 
     // Create a brand object with escaped and trimmed data.
+    let filename = req.file.originalname;
+    filename = Date.now() + path.extname(req.file.originalname);
+
     const category = new Category({
       name: req.body.name,
-      image: req.file.filename,
+      image: filename,
     });
 
     if (imageFormatCheck(req)) {
@@ -105,9 +155,6 @@ exports.category_create_post = [
     }
 
     if (!errors.isEmpty()) {
-      fs.unlink(req.file.path, (err) => {
-        if (err) console.log(err.message);
-      });
       // There are errors. Render the form again with sanitized values/error messages.
       res.render("category_form", {
         title: "Create Category",
@@ -118,23 +165,33 @@ exports.category_create_post = [
     } else {
       // Data from form is valid.
       // Check if category with same name already exists.
-      Category.findOne({ name: req.body.name }).exec((err, found_category) => {
-        if (err) {
-          return next(err);
+      Category.findOne({ name: req.body.name }).exec(
+        async (err, found_category) => {
+          if (err) {
+            return next(err);
+          }
+          if (found_category) {
+            // category exists, redirect to its detail page.
+            res.redirect(found_category.url);
+          } else {
+            const params = {
+              Bucket: bucketName,
+              Key: filename,
+              Body: req.file.buffer,
+              Type: req.file.mimetype,
+            };
+            const command = new PutObjectCommand(params);
+            await s3.send(command);
+            category.save((err) => {
+              if (err) {
+                return next(err);
+              }
+              // Category saved. Redirect to genre detail page.
+              res.redirect(category.url);
+            });
+          }
         }
-        if (found_category) {
-          // category exists, redirect to its detail page.
-          res.redirect(found_category.url);
-        } else {
-          category.save((err) => {
-            if (err) {
-              return next(err);
-            }
-            // Genre saved. Redirect to genre detail page.
-            res.redirect(category.url);
-          });
-        }
-      });
+      );
     }
   },
 ];

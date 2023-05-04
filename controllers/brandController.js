@@ -11,6 +11,7 @@ const {
   S3Client,
   PutObjectCommand,
   GetObjectCommand,
+  DeleteObjectCommand,
 } = require("@aws-sdk/client-s3");
 const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 
@@ -133,7 +134,6 @@ exports.brand_create_post = [
   check("name", "Brand name required").trim().isLength({ min: 1 }).escape(),
   // Process request after validation and sanitization.
   (req, res, next) => {
-    console.log(req.file);
     // Extract the validation errors from a request.
     const errors = validationResult(req);
 
@@ -211,7 +211,7 @@ exports.brand_delete_get = (req, res, next) => {
           .exec(callback);
       },
     },
-    function (err, results) {
+    async function (err, results) {
       if (err) {
         return next(err);
       }
@@ -221,6 +221,22 @@ exports.brand_delete_get = (req, res, next) => {
         err.status = 404;
         return next(err);
       }
+      for (const item of results.brand_items) {
+        const getObjectParams = {
+          Bucket: bucketName,
+          Key: item.image,
+        };
+        const command = new GetObjectCommand(getObjectParams);
+        const url = await getSignedUrl(s3, command, { expiresIn: 3600 });
+        item.imageUrl = url;
+      }
+      const getObjectParams = {
+        Bucket: bucketName,
+        Key: results.brand.image,
+      };
+      const command = new GetObjectCommand(getObjectParams);
+      const url = await getSignedUrl(s3, command, { expiresIn: 3600 });
+      results.brand.imageUrl = url;
       // Successful, so render
       res.render("brand_delete", {
         title: "Delete Brand",
@@ -258,14 +274,20 @@ exports.brand_delete_post = (req, res, next) => {
         });
         return;
       }
+
+      Brand.findById(req.params.id, async (err, brand) => {
+        const deleteObjectParams = {
+          Bucket: bucketName,
+          Key: brand.image,
+        };
+        const command = new DeleteObjectCommand(deleteObjectParams);
+        await s3.send(command);
+      });
       // Brand has no items. Delete an object and redirect
-      Brand.findByIdAndRemove(req.body.brandid, (err) => {
+      Brand.findByIdAndRemove(req.body.brandid, async (err) => {
         if (err) {
           return next(err);
         }
-        fs.unlink(path.join("public/uploads", req.body.imagename), (err) => {
-          if (err) console.log(err.message);
-        });
         // Success - go to item list
         res.redirect("/brand");
       });
@@ -308,10 +330,13 @@ exports.brand_update_post = [
     // Extract the validation errors from a request.
     const errors = validationResult(req);
 
+    let filename = req.file.originalname;
+    filename = Date.now() + path.extname(req.file.originalname);
+
     // Create a brand object with escaped and trimmed data.
     const brand = new Brand({
       name: req.body.name,
-      image: req.file.filename,
+      image: filename,
       _id: req.params.id,
     });
 
@@ -322,9 +347,9 @@ exports.brand_update_post = [
     }
 
     if (!errors.isEmpty()) {
-      fs.unlink(req.file.path, (err) => {
-        if (err) console.log(err.message);
-      });
+      // fs.unlink(req.file.path, (err) => {
+      //   if (err) console.log(err.message);
+      // });
       // There are errors. Render the form again with sanitized values/error messages.
       res.render("brand_form", {
         title: "Create Brand",
@@ -334,20 +359,36 @@ exports.brand_update_post = [
       return;
     } else {
       // Data from form is valid.
-      Brand.findById(req.params.id, (err, brand) => {
-        fs.unlink(path.join("public/uploads", brand.image), (err) => {
-          if (err) console.log(err.message);
-        });
+      Brand.findById(req.params.id, async (err, brand) => {
+        const deleteObjectParams = {
+          Bucket: bucketName,
+          Key: brand.image,
+        };
+        const command = new DeleteObjectCommand(deleteObjectParams);
+        await s3.send(command);
       });
 
       // Data from form is valid. Update the record.
-      Brand.findByIdAndUpdate(req.params.id, brand, {}, (err, thebrand) => {
-        if (err) {
-          return next(err);
+      Brand.findByIdAndUpdate(
+        req.params.id,
+        brand,
+        {},
+        async (err, thebrand) => {
+          if (err) {
+            return next(err);
+          }
+          const params = {
+            Bucket: bucketName,
+            Key: filename,
+            Body: req.file.buffer,
+            Type: req.file.mimetype,
+          };
+          const command = new PutObjectCommand(params);
+          await s3.send(command);
+          // Successful: redirect to book detail page.
+          res.redirect(thebrand.url);
         }
-        // Successful: redirect to book detail page.
-        res.redirect(thebrand.url);
-      });
+      );
     }
   },
 ];

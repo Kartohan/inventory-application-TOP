@@ -11,7 +11,7 @@ block content
                 div.bg-slate-100.rounded-lg.shadow-xl.relative(class='h-min-[450px] w-[250px] transition hover:scale-[1.02] hover:shadow-xl hover:ring-1')
                     if item.admin
                         p.absolute.text-sm.top-2.right-2.bg-slate-400.p-1.bg-opacity-40.rounded-lg  Admin
-                    img.w-full.object-contain(src="../../uploads/" + item.image alt=item.name class="h-[297px]")
+                    img.w-full.object-contain(src=item.imageUrl alt=item.name class="h-[297px]")
                     div.flex-col.px-3.gap-1.flex
                         p.text-xl.font-bold #{item.name}
                         p.text-lg #{item.price}
@@ -24,7 +24,7 @@ block content
       p.text-center.text-2xl.py-3.bg-red-200.mb-5 Do you really want to delete this Brand?
       div.mx-auto.my-10.flex.gap-2.items-center.flex-wrap.flex-col
         div.h-72.w-56.rounded-lg.relative.shadow-md.ring-1.overflow-hidden(class="")
-          img.absolute.object-contain.h-full.w-full.p-2(src="../../uploads/" + brand.image, alt=brand.name)
+          img.absolute.object-contain.h-full.w-full.p-2(src=brand.imageUrl, alt=brand.name)
         p.text-white.z-10.text-2xl.text-center(class="catalog-text") #{brand.name}
         form(method='POST' action='')
               div
