@@ -7,13 +7,8 @@ const multer = require("multer");
 const fs = require("fs");
 const path = require("path");
 const mongoose = require("mongoose");
-const {
-  S3Client,
-  PutObjectCommand,
-  GetObjectCommand,
-  DeleteObjectCommand,
-} = require("@aws-sdk/client-s3");
-const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
+const bucket = require("../firebase");
+const { getImage } = require("../firebase");
 
 const imageFormatCheck = (req) => {
   let format = req.file.mimetype.split("/");
@@ -24,41 +19,11 @@ const imageFormatCheck = (req) => {
   }
 };
 
-const bucketName = process.env.AWS_BUCKET_NAME;
-const bucketRegion = process.env.AWS_BUCKET_REGION;
-const accessKey = process.env.AWS_ACCESS_KEY;
-const secretKey = process.env.AWS_SECRET_KEY;
-
-const s3 = new S3Client({
-  credentials: {
-    accessKeyId: accessKey,
-    secretAccessKey: secretKey,
-  },
-  region: bucketRegion,
-});
-
 // Display list of all Brands.
 exports.brand_list = async (req, res) => {
   const brands = await Brand.find();
-  // console.log(brands);
-  // Brand.find().exec(async (err, brands) => {
-  //   if (err) {
-  //     // Error in API usage.
-  //     return next(err);
-  //   }
-  //   res.render("brand_list", {
-  //     title: "Brand list",
-  //     brands: brands,
-  //   });
-  // });
   for (const brand of brands) {
-    const getObjectParams = {
-      Bucket: bucketName,
-      Key: brand.image,
-    };
-    const command = new GetObjectCommand(getObjectParams);
-    const url = await getSignedUrl(s3, command, { expiresIn: 3600 });
-    brand.imageUrl = url;
+    brand.imageUrl = await getImage(brand.image);
   }
   res.render("brand_list", {
     title: "Brand list",
@@ -86,7 +51,7 @@ exports.brand_detail = (req, res, next) => {
           .exec(callback);
       },
     },
-    function (err, results) {
+    async function (err, results) {
       if (err) {
         return next(err);
       }
@@ -95,6 +60,9 @@ exports.brand_detail = (req, res, next) => {
         var err = new Error("Brand not found");
         err.status = 404;
         return next(err);
+      }
+      for (const brand of results.brand_items) {
+        brand.imageUrl = await getImage(brand.image);
       }
       // Successful, so render
       res.render("brand_detail", {
