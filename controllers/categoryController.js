@@ -6,7 +6,7 @@ const multer = require("multer");
 const fs = require("fs");
 const path = require("path");
 const mongoose = require("mongoose");
-const { getImage } = require("../firebase");
+const { bucket, getImage, uploadFile } = require("../firebase");
 
 const imageFormatCheck = (req) => {
   let format = req.file.mimetype.split("/");
@@ -144,14 +144,15 @@ exports.category_create_post = [
             // category exists, redirect to its detail page.
             res.redirect(found_category.url);
           } else {
-            const params = {
-              Bucket: bucketName,
-              Key: filename,
-              Body: req.file.buffer,
-              Type: req.file.mimetype,
-            };
-            const command = new PutObjectCommand(params);
-            await s3.send(command);
+            // const params = {
+            //   Bucket: bucketName,
+            //   Key: filename,
+            //   Body: req.file.buffer,
+            //   Type: req.file.mimetype,
+            // };
+            // const command = new PutObjectCommand(params);
+            // await s3.send(command);
+            await uploadFile(req.file.buffer, filename, req.file.mimetype);
             category.save((err) => {
               if (err) {
                 return next(err);
@@ -197,21 +198,21 @@ exports.category_delete_get = (req, res, next) => {
         return next(err);
       }
       for (const item of results.category_items) {
-        const getObjectParams = {
-          Bucket: bucketName,
-          Key: item.image,
-        };
-        const command = new GetObjectCommand(getObjectParams);
-        const url = await getSignedUrl(s3, command, { expiresIn: 3600 });
-        item.imageUrl = url;
+        // const getObjectParams = {
+        //   Bucket: bucketName,
+        //   Key: item.image,
+        // };
+        // const command = new GetObjectCommand(getObjectParams);
+        // const url = await getSignedUrl(s3, command, { expiresIn: 3600 });
+        item.imageUrl = await getImage(item.image);
       }
-      const getObjectParams = {
-        Bucket: bucketName,
-        Key: results.category.image,
-      };
-      const command = new GetObjectCommand(getObjectParams);
-      const url = await getSignedUrl(s3, command, { expiresIn: 3600 });
-      results.category.imageUrl = url;
+      // const getObjectParams = {
+      //   Bucket: bucketName,
+      //   Key: results.category.image,
+      // };
+      // const command = new GetObjectCommand(getObjectParams);
+      // const url = await getSignedUrl(s3, command, { expiresIn: 3600 });
+      results.category.imageUrl = await getImage(results.category.image);;
       // Successful, so render
       res.render("category_delete", {
         title: "Delete category",
@@ -256,12 +257,18 @@ exports.category_delete_post = (req, res, next) => {
           if (err) {
             return next(err);
           }
-          const deleteObjectParams = {
-            Bucket: bucketName,
-            Key: deletecategory.image,
-          };
-          const command = new DeleteObjectCommand(deleteObjectParams);
-          await s3.send(command);
+          bucket
+            .file(deletecategory.image)
+            .delete()
+            .catch((err) => {
+              console.error("Error deleting file:", err);
+            });
+          // const deleteObjectParams = {
+          //   Bucket: bucketName,
+          //   Key: deletecategory.image,
+          // };
+          // const command = new DeleteObjectCommand(deleteObjectParams);
+          // await s3.send(command);
           // Success - go to item list
           res.redirect("/category");
         }
@@ -344,21 +351,28 @@ exports.category_update_post = [
           if (err) {
             return next(err);
           }
-          const deleteObjectParams = {
-            Bucket: bucketName,
-            Key: thecategory.image,
-          };
-          const deletecommand = new DeleteObjectCommand(deleteObjectParams);
+          bucket
+            .file(thecategory.image)
+            .delete()
+            .catch((err) => {
+              console.error("Error deleting file:", err);
+            });
+          // const deleteObjectParams = {
+          //   Bucket: bucketName,
+          //   Key: thecategory.image,
+          // };
+          // const deletecommand = new DeleteObjectCommand(deleteObjectParams);
           console.log(`Deleted image ${thecategory.image}`);
-          await s3.send(deletecommand);
-          const params = {
-            Bucket: bucketName,
-            Key: filename,
-            Body: req.file.buffer,
-            Type: req.file.mimetype,
-          };
-          const command = new PutObjectCommand(params);
-          await s3.send(command);
+          // await s3.send(deletecommand);
+          // const params = {
+          //   Bucket: bucketName,
+          //   Key: filename,
+          //   Body: req.file.buffer,
+          //   Type: req.file.mimetype,
+          // };
+          // const command = new PutObjectCommand(params);
+          // await s3.send(command);
+          await uploadFile(req.file.buffer, filename, req.file.mimetype);
           // Successful: redirect to book detail page.
           res.redirect(thecategory.url);
         }

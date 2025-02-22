@@ -13,7 +13,7 @@ const multer = require("multer");
 const fs = require("fs");
 const path = require("path");
 const mongoose = require("mongoose");
-const { bucket, getImage, uploadFile } = require("../firebase");
+const { bucket, getImage, uploadFile, removeFile } = require("../firebase");
 const sharp = require("sharp");
 
 const imageFormatCheck = (req) => {

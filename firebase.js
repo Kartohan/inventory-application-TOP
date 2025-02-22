@@ -22,6 +22,15 @@ async function getImage(imageName) {
   return url;
 }
 
+async function removeFile(path) {
+  try {
+    await bucket.file(path).delete();
+    console.log(`File ${path} deleted successfully.`);
+  } catch (error) {
+    console.error("Error deleting file:", error);
+  }
+}
+
 async function uploadFile(buffer, name, mime) {
   return new Promise((resolve, reject) => {
     sharp(buffer)
@@ -50,4 +59,4 @@ async function uploadFile(buffer, name, mime) {
   });
 }
 
-module.exports = { bucket, getImage, uploadFile };
+module.exports = { bucket, getImage, uploadFile, removeFile };

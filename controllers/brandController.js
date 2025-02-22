@@ -7,8 +7,7 @@ const multer = require("multer");
 const fs = require("fs");
 const path = require("path");
 const mongoose = require("mongoose");
-const bucket = require("../firebase");
-const { getImage } = require("../firebase");
+const { bucket, getImage, uploadFile } = require("../firebase");
 
 const imageFormatCheck = (req) => {
   let format = req.file.mimetype.split("/");
@@ -138,14 +137,7 @@ exports.brand_create_post = [
           // brand exists, redirect to its detail page.
           res.redirect(found_brand.url);
         } else {
-          const params = {
-            Bucket: bucketName,
-            Key: filename,
-            Body: req.file.buffer,
-            Type: req.file.mimetype,
-          };
-          const command = new PutObjectCommand(params);
-          await s3.send(command);
+          await uploadFile(req.file.buffer, filename, req.file.mimetype);
           brand.save((err) => {
             if (err) {
               return next(err);
@@ -190,21 +182,21 @@ exports.brand_delete_get = (req, res, next) => {
         return next(err);
       }
       for (const item of results.brand_items) {
-        const getObjectParams = {
-          Bucket: bucketName,
-          Key: item.image,
-        };
-        const command = new GetObjectCommand(getObjectParams);
-        const url = await getSignedUrl(s3, command, { expiresIn: 3600 });
-        item.imageUrl = url;
+        // const getObjectParams = {
+        //   Bucket: bucketName,
+        //   Key: item.image,
+        // };
+        // const command = new GetObjectCommand(getObjectParams);
+        // const url = await getSignedUrl(s3, command, { expiresIn: 3600 });
+        item.imageUrl = await getImage(item.image);
       }
-      const getObjectParams = {
-        Bucket: bucketName,
-        Key: results.brand.image,
-      };
-      const command = new GetObjectCommand(getObjectParams);
-      const url = await getSignedUrl(s3, command, { expiresIn: 3600 });
-      results.brand.imageUrl = url;
+      // const getObjectParams = {
+      //   Bucket: bucketName,
+      //   Key: results.brand.image,
+      // };
+      // const command = new GetObjectCommand(getObjectParams);
+      // const url = await getSignedUrl(s3, command, { expiresIn: 3600 });
+      results.brand.imageUrl = await getImage(results.brand.image);
       // Successful, so render
       res.render("brand_delete", {
         title: "Delete Brand",
@@ -249,13 +241,19 @@ exports.brand_delete_post = (req, res, next) => {
         if (err) {
           return next(err);
         }
-        const deleteObjectParams = {
-          Bucket: bucketName,
-          Key: deletebrand.image,
-        };
-        const command = new DeleteObjectCommand(deleteObjectParams);
-        await s3.send(command);
-        console.log(deletebrand);
+        // const deleteObjectParams = {
+        //   Bucket: bucketName,
+        //   Key: deletebrand.image,
+        // };
+        // const command = new DeleteObjectCommand(deleteObjectParams);
+        // await s3.send(command);
+        bucket
+          .file(deletebrand.image)
+          .delete()
+          .catch((err) => {
+            console.error("Error deleting file:", err);
+          });
+        // console.log(deletebrand);
         // Success - go to item list
         res.redirect("/brand");
       });
@@ -338,20 +336,27 @@ exports.brand_update_post = [
           if (err) {
             return next(err);
           }
-          const deleteObjectParams = {
-            Bucket: bucketName,
-            Key: thebrand.image,
-          };
-          const deletecommand = new DeleteObjectCommand(deleteObjectParams);
-          await s3.send(deletecommand);
-          const params = {
-            Bucket: bucketName,
-            Key: filename,
-            Body: req.file.buffer,
-            Type: req.file.mimetype,
-          };
-          const command = new PutObjectCommand(params);
-          await s3.send(command);
+          bucket
+            .file(thebrand.image)
+            .delete()
+            .catch((err) => {
+              console.error("Error deleting file:", err);
+            });
+          await uploadFile(req.file.buffer, filename, req.file.mimetype);
+          // const deleteObjectParams = {
+          //   Bucket: bucketName,
+          //   Key: thebrand.image,
+          // };
+          // const deletecommand = new DeleteObjectCommand(deleteObjectParams);
+          // await s3.send(deletecommand);
+          // const params = {
+          //   Bucket: bucketName,
+          //   Key: filename,
+          //   Body: req.file.buffer,
+          //   Type: req.file.mimetype,
+          // };
+          // const command = new PutObjectCommand(params);
+          // await s3.send(command);
           // Successful: redirect to book detail page.
           res.redirect(thebrand.url);
         }
