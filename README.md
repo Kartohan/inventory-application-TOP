@@ -29,7 +29,9 @@ What else can be done:
 1. Different screen support, phone support.
 2. Maybe comments and rate system.
 
-Link - https://inventory-application-top-production.up.railway.app
+23.02.2025 - Changed to another storage platform. Moved from s3 to Firebase Storage, also migrated to Render cloud application platform because Railway became paid.
+
+Link - https://inventory-application-top.onrender.com
 
 Preview:
 ![preview](https://i.imgur.com/it6jky9.png "Application Preview")
